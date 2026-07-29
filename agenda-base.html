@@ -591,7 +591,7 @@
 </div>
 
 <script>
-const STORE = "lumen.appointments";
+const STORE = "lumen.base.appointments";
 const DOW = ["LUN","MAR","MIÉ","JUE","VIE","SÁB","DOM"];
 const MONTHS = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
 const DAYS_LONG = ["domingo","lunes","martes","miércoles","jueves","viernes","sábado"];
@@ -617,7 +617,7 @@ let state = {
 
 // ---------- helpers ----------
 function load(){ try{ return JSON.parse(localStorage.getItem(STORE)) || []; }catch(e){ return []; } }
-function saveAppts() { localStorage.setItem("lumen.base.appointments", JSON.stringify(state.appointments)); }
+function save(){ localStorage.setItem(STORE, JSON.stringify(state.appts)); }
 function iso(d){ return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); }
 function parseIso(s){ const [y,m,d]=s.split("-").map(Number); return new Date(y,m-1,d); }
 function todayIso(){ return iso(new Date()); }
