@@ -252,13 +252,13 @@ function updateBar(){
 
 // Step 1
 function renderServices(){
-  document.getElementById('serviceGrid').innerHTML=SERVICES.map(function(s){
-    return '<div class="service-card" data-id="'+s.id+'" onclick="pickSvc(\''+s.id+'\')"><div><div class="sv-name">'+s.name+'</div><div class="sv-dur">~'+s.duration+' min</div></div><div class="sv-badge">'+s.priceLabel+'</div></div>';
+  document.getElementById('serviceGrid').innerHTML=SERVICES.map(function(s, i){
+    return '<div class="service-card" data-id="'+i+'" onclick="pickSvc('+i+')"><div><div class="sv-name">'+s.name+'</div><div class="sv-dur">~'+s.duration+'</div></div><div class="sv-badge">$'+s.price+'</div></div>';
   }).join('');
 }
-window.pickSvc=function(id){
-  selSvc=SERVICES.filter(function(s){return s.id===id;})[0];
-  document.querySelectorAll('.service-card').forEach(function(el){el.classList.toggle('selected',el.dataset.id===id);});
+window.pickSvc=function(i){
+  selSvc=SERVICES[i];
+  document.querySelectorAll('.service-card').forEach(function(el){el.classList.toggle('selected',parseInt(el.dataset.id)===i);});
   document.getElementById('s1Next').disabled=false;
 };
 document.getElementById('s1Next').onclick=function(){goStep(2);renderCal();};
@@ -374,7 +374,7 @@ document.getElementById('s3Back').onclick=function(){goStep(2);};
 // Step 4
 function renderSummary(){
   var end=selSlot?addMins(selSlot,selSvc?selSvc.duration:60):'';
-  document.getElementById('bookSummary').innerHTML='<div class="summary-row"><span class="k">Servicio</span><span class="v">'+(selSvc?selSvc.name:'')+'</span></div><div class="summary-row"><span class="k">Precio</span><span class="v">'+(selSvc?selSvc.priceLabel:'')+'</span></div><div class="summary-row"><span class="k">Fecha</span><span class="v">'+(selDate?fmtDate(selDate):'')+'</span></div><div class="summary-row"><span class="k">Horario</span><span class="v">'+(selSlot?fmt12h(selSlot):'')+' - '+fmt12h(end)+'</span></div>';
+  document.getElementById('bookSummary').innerHTML='<div class="summary-row"><span class="k">Servicio</span><span class="v">'+(selSvc?selSvc.name:'')+'</span></div><div class="summary-row"><span class="k">Precio</span><span class="v">'+(selSvc?'$'+selSvc.price:'')+'</span></div><div class="summary-row"><span class="k">Fecha</span><span class="v">'+(selDate?fmtDate(selDate):'')+'</span></div><div class="summary-row"><span class="k">Horario</span><span class="v">'+(selSlot?fmt12h(selSlot):'')+' - '+fmt12h(end)+'</span></div>';
 }
 document.getElementById('s4Back').onclick=function(){goStep(3);};
 document.getElementById('s4Submit').onclick=async function(){
