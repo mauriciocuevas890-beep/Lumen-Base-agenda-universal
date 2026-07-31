@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Agendar Cita - Preparacion de Taxes</title>
+<meta name="description" content="Agenda tu cita de preparacion de taxes. Elige servicio, fecha y horario disponible." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,400;9..144,600&display=swap" rel="stylesheet" />
+<style>
+:root{--blue:#2563EB;--blue-dark:#1D4ED8;--blue-light:#EFF6FF;--blue-mid:#DBEAFE;--text:#0F172A;--muted:#64748B;--border:#E2E8F0;--card:#FFFFFF;--bg:#F8FAFC;--radius:14px;--green:#059669;--green-bg:#ECFDF5;--red:#DC2626;--red-bg:#FEF2F2;}
+*{box-sizing:border-box;margin:0;padding:0}html,body{min-height:100%}
+body{font-family:"DM Sans",system-ui,sans-serif;background:var(--bg);color:var(--text);font-size:15px;-webkit-font-smoothing:antialiased;}
+.header{background:#fff;border-bottom:1px solid var(--border);padding:18px 24px;display:flex;align-items:center;gap:14px;position:sticky;top:0;z-index:10;}
+.header-logo{width:40px;height:40px;background:var(--blue);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.header-logo svg{width:22px;height:22px;color:#fff}
+.header-title{font-family:"Fraunces",serif;font-size:20px;font-weight:600}
+.header-sub{font-size:12px;color:var(--muted);margin-top:2px}
+.main{max-width:560px;margin:0 auto;padding:32px 20px 60px}
+.steps{display:flex;align-items:center;margin-bottom:32px}
+.step-item{display:flex;align-items:center;gap:8px;flex:1}.step-item:last-child{flex:none}
+.step-num{width:30px;height:30px;border-radius:50%;background:var(--border);color:var(--muted);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;transition:all .2s}
+.step-item.done .step-num{background:var(--blue);color:#fff}
+.step-item.active .step-num{background:var(--blue);color:#fff;box-shadow:0 0 0 4px var(--blue-mid)}
+.step-label{font-size:11px;color:var(--muted)}
+@media(max-width:400px){.step-label{display:none}}
+.step-item.done .step-label,.step-item.active .step-label{color:var(--blue);font-weight:600}
+.step-line{flex:1;height:2px;background:var(--border);margin:0 6px;transition:background .2s}.step-line.done{background:var(--blue)}
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:28px;box-shadow:0 1px 3px rgba(0,0,0,.05)}
+.card-title{font-family:"Fraunces",serif;font-size:22px;font-weight:600;margin-bottom:6px}
+.card-sub{font-size:13.5px;color:var(--muted);margin-bottom:24px}
+.service-grid{display:grid;gap:12px}
+.service-card{border:2px solid var(--border);border-radius:12px;padding:18px 20px;cursor:pointer;transition:all .15s;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.service-card:hover,.service-card.selected{border-color:var(--blue);background:var(--blue-light)}
+.sv-name{font-weight:600;font-size:15px}.sv-dur{font-size:13px;color:var(--muted);margin-top:3px}
+.sv-badge{font-size:12px;font-weight:700;background:var(--blue-mid);color:var(--blue);border-radius:8px;padding:6px 12px;flex-shrink:0}
+.service-card.selected .sv-badge{background:var(--blue);color:#fff}
+.cal-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.cal-nav .month-lbl{font-weight:700;font-size:15px}
+.cal-btn{width:34px;height:34px;border-radius:8px;border:1px solid var(--border);background:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text)}.cal-btn:hover{background:var(--blue-light)}.cal-btn svg{width:16px;height:16px}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;text-align:center}
+.cal-dow{font-size:11px;font-weight:700;color:var(--muted);padding:6px 0;letter-spacing:.5px}
+.cal-day{aspect-ratio:1;display:flex;align-items:center;justify-content:center;border-radius:8px;font-size:13px;cursor:pointer;transition:all .1s;border:2px solid transparent;position:relative}
+.cal-day.out,.cal-day.past,.cal-day.blocked{color:#CBD5E1;cursor:default}
+.cal-day.blocked{text-decoration:line-through}
+.cal-day.open:hover{background:var(--blue-light);color:var(--blue)}
+.cal-day.open::after{content:'';position:absolute;bottom:4px;left:50%;transform:translateX(-50%);width:5px;height:5px;border-radius:50%;background:var(--blue)}
+.cal-day.selected{background:var(--blue);color:#fff;border-color:var(--blue-dark)}.cal-day.selected::after{background:#fff}
+.cal-day.today{font-weight:700}
+.slots-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.slot{border:2px solid var(--border);border-radius:10px;padding:12px 8px;text-align:center;cursor:pointer;font-size:14px;font-weight:600;transition:all .15s;color:var(--text)}
+.slot:hover{border-color:var(--blue);background:var(--blue-light)}.slot.selected{background:var(--blue);color:#fff;border-color:var(--blue)}
+.slot.taken{background:#F1F5F9;color:#CBD5E1;cursor:not-allowed;border-color:var(--border);font-weight:400}
+.slots-loading{text-align:center;color:var(--muted);padding:20px;font-size:13px}
+.form-grid{display:grid;gap:16px}
+.field{display:flex;flex-direction:column;gap:6px}
+.field label{font-size:11px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--muted)}
+.field input,.field textarea{border:1.5px solid var(--border);border-radius:10px;padding:12px 14px;font-family:inherit;font-size:14.5px;color:var(--text);background:#fff;outline:none;transition:all .15s}
+.field input:focus,.field textarea:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37,99,235,.1)}
+.field textarea{resize:vertical;min-height:80px}
+.summary-box{background:var(--blue-light);border:1px solid var(--blue-mid);border-radius:12px;padding:18px 20px;margin-bottom:20px;display:grid;gap:10px}
+.summary-row{display:flex;justify-content:space-between;align-items:center;font-size:13.5px}
+.summary-row .k{color:var(--muted)}.summary-row .v{font-weight:700}
+.btn-primary{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:15px;background:var(--blue);color:#fff;border:none;border-radius:12px;font-family:inherit;font-weight:700;font-size:15px;cursor:pointer;transition:all .15s;margin-top:4px}
+.btn-primary:hover{background:var(--blue-dark)}.btn-primary:active{transform:scale(.98)}.btn-primary:disabled{background:#94A3B8;cursor:not-allowed;transform:none}.btn-primary svg{width:18px;height:18px}
+.btn-ghost{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:13px;background:none;color:var(--muted);border:1.5px solid var(--border);border-radius:12px;font-family:inherit;font-weight:600;font-size:14px;cursor:pointer;transition:all .15s;margin-top:10px}
+.btn-ghost:hover{background:var(--blue-light);border-color:var(--blue);color:var(--blue)}
+.success-screen{text-align:center;padding:20px 0}
+.success-icon{width:72px;height:72px;background:var(--green-bg);border-radius:50%;display:inline-flex;align-items:center;justify-content:center;margin-bottom:20px}
+.success-icon svg{width:36px;height:36px;color:var(--green)}
+.success-title{font-family:"Fraunces",serif;font-size:26px;font-weight:600;margin-bottom:10px}
+.success-sub{font-size:14px;color:var(--muted);line-height:1.6;margin-bottom:24px}
+.booking-id{display:inline-block;background:var(--blue-light);border:1px solid var(--blue-mid);border-radius:10px;padding:12px 24px;font-family:monospace;font-size:20px;font-weight:700;letter-spacing:3px;color:var(--blue);margin-bottom:8px}
+.booking-id-label{font-size:11px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:24px}
+.msg-error{background:var(--red-bg);color:var(--red);border:1px solid #FCA5A5;border-radius:10px;padding:12px 16px;font-size:13.5px;margin-bottom:16px;display:none}.msg-error.show{display:block}
+.fw-warn{background:#FFFBEB;border:1px solid #FCD34D;border-radius:10px;padding:14px 16px;font-size:13px;color:#92400E;margin-bottom:20px;display:none}.fw-warn.show{display:block}
+@keyframes spin{to{transform:rotate(360deg)}}
+.spinner{display:inline-block;width:18px;height:18px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite}
+.step-view{display:none}.step-view.active{display:block}
+@media(max-width:480px){.main{padding:20px 14px 50px}.card{padding:20px 18px}.slots-grid{grid-template-columns:repeat(2,1fr)}}
+</style>
+</head>
+<body>
+<header class="header">
+  <div class="header-logo">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+  </div>
+  <div>
+    <div class="header-title">Agenda de Citas</div>
+    <div class="header-sub">Agenda tu cita en minutos</div>
+  </div>
+</header>
+<main class="main">
+  <div class="fw-warn" id="fwWarn">&#9888; <strong>Modo de prueba:</strong> Supabase no configurado. Agrega tus credenciales en booking.html.</div>
+  <div class="steps" id="stepsBar">
+    <div class="step-item active" id="si1"><div class="step-num">1</div><div class="step-label">Servicio</div></div>
+    <div class="step-line" id="sl1"></div>
+    <div class="step-item" id="si2"><div class="step-num">2</div><div class="step-label">Fecha</div></div>
+    <div class="step-line" id="sl2"></div>
+    <div class="step-item" id="si3"><div class="step-num">3</div><div class="step-label">Horario</div></div>
+    <div class="step-line" id="sl3"></div>
+    <div class="step-item" id="si4"><div class="step-num">4</div><div class="step-label">Tus datos</div></div>
+  </div>
+  <div class="step-view active" id="step1">
+    <div class="card">
+      <div class="card-title">Que servicio necesitas?</div>
+      <div class="card-sub">Selecciona el tipo de declaracion.</div>
+      <div class="service-grid" id="serviceGrid"></div>
+      <button class="btn-primary" id="s1Next" style="margin-top:24px" disabled>Continuar <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></button>
+    </div>
+  </div>
+  <div class="step-view" id="step2">
+    <div class="card">
+      <div class="card-title">Selecciona una fecha</div>
+      <div class="card-sub">Los dias con punto azul tienen disponibilidad.</div>
+      <div class="cal-nav">
+        <button class="cal-btn" id="calPrev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button>
+        <span class="month-lbl" id="calMonthLbl"></span>
+        <button class="cal-btn" id="calNext"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></button>
+      </div>
+      <div class="cal-grid" id="calGrid"></div>
+      <button class="btn-primary" id="s2Next" style="margin-top:24px" disabled>Ver horarios <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></button>
+      <button class="btn-ghost" id="s2Back">Cambiar servicio</button>
+    </div>
+  </div>
+  <div class="step-view" id="step3">
+    <div class="card">
+      <div class="card-title">Elige tu horario</div>
+      <div class="card-sub" id="s3Label"></div>
+      <div id="slotsContainer"><div class="slots-loading">Cargando horarios...</div></div>
+      <button class="btn-primary" id="s3Next" style="margin-top:24px" disabled>Continuar <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></button>
+      <button class="btn-ghost" id="s3Back">Cambiar fecha</button>
+    </div>
+  </div>
+  <div class="step-view" id="step4">
+    <div class="card">
+      <div class="card-title">Tus datos</div>
+      <div class="card-sub">Completa tu informacion para confirmar.</div>
+      <div class="summary-box" id="bookSummary"></div>
+      <div class="msg-error" id="formErr"></div>
+      <div class="form-grid">
+        <div class="field"><label>Nombre completo *</label><input id="bName" type="text" placeholder="Juan Garcia" /></div>
+        <div class="field"><label>Telefono *</label><input id="bPhone" type="tel" placeholder="+1 (555) 000-0000" /></div>
+        <div class="field"><label>Notas (opcional)</label><textarea id="bNotes" placeholder="Documentos que tienes, preguntas..."></textarea></div>
+      </div>
+      <button class="btn-primary" id="s4Submit" style="margin-top:20px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>Confirmar cita</button>
+      <button class="btn-ghost" id="s4Back">Cambiar horario</button>
+    </div>
+  </div>
+  <div class="step-view" id="stepOk">
+    <div class="card">
+      <div class="success-screen">
+        <div class="success-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div>
+        <div class="success-title">Cita solicitada!</div>
+        <div class="success-sub">Tu solicitud fue enviada. Te contactaremos para confirmarla.<br>Guarda tu numero de referencia:</div>
+        <div class="booking-id" id="bidDisplay">---</div>
+        <div class="booking-id-label">Numero de confirmacion</div>
+        <button class="btn-primary" onclick="location.reload()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.2"/></svg>Agendar otra cita</button>
+      </div>
+    </div>
+  </div>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+// =============================================
+//  CONFIGURACION SUPABASE
+//  Copia estos datos de tu proyecto en supabase.com
+//  Project Settings > API
+// =============================================
+const SUPABASE_URL  = 'https://fewtdoqjqwvusgexieqg.supabase.co';      // ejemplo: https://abcxyz.supabase.co
+const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZld3Rkb3FqcXd2dXNnZXhpZXFnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU0NDIxNzEsImV4cCI6MjEwMTAxODE3MX0.QQ4pwxT3VoWia0jIW8Fj9z-mgMMTFlmnULYUx0OZPc4'; // clave publica (anon/public)
+
+// Disponibilidad por defecto (se sobreescribe desde la tabla config en Supabase)
+var AVAIL = { daysOff:[0,6], startHour:9, endHour:17, slotMinutes:60, blockedDates:[] };
+var sbClient = null, sbOk = false;
+
+var SERVICES = [
+  { id:'individual',   name:'Declaracion Individual', price:150,  priceLabel:'$150',      duration:60 },
+  { id:'conjunta',     name:'Declaracion Conjunta',   price:200,  priceLabel:'$200',      duration:60 },
+  { id:'negocio',      name:'Declaracion de Negocio', price:350,  priceLabel:'$350',      duration:90 },
+  { id:'personalizado',name:'Personalizado',          price:null, priceLabel:'A convenir',duration:60 }
+];
+
+var selSvc=null, selDate=null, selSlot=null, calRef=new Date();
+
+// Init Supabase
+try {
+  if (!SUPABASE_URL.startsWith('REEMPLAZA') && window.supabase) {
+    sbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+    sbOk = true;
+    // Load availability from config table
+    sbClient.from('config').select('value').eq('key','availability').single().then(function(r){
+      if (r.data && r.data.value) AVAIL = Object.assign({}, AVAIL, r.data.value);
+    });
+  } else {
+    document.getElementById('fwWarn').classList.add('show');
+  }
+} catch(e) { document.getElementById('fwWarn').classList.add('show'); }
+
+// Helpers
+function pad(n){ return String(n).padStart(2,'0'); }
+function iso(d){ return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate()); }
+function parseIso(s){ var p=s.split('-').map(Number); return new Date(p[0],p[1]-1,p[2]); }
+var MONTHS_ES=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+var DAYS_ES=['domingo','lunes','martes','miercoles','jueves','viernes','sabado'];
+function fmtDate(s){ var d=parseIso(s); return DAYS_ES[d.getDay()]+' '+d.getDate()+' de '+MONTHS_ES[d.getMonth()]; }
+function addMins(t,m){ var p=t.split(':').map(Number),tot=p[0]*60+p[1]+m; return pad(Math.floor(tot/60))+':'+pad(tot%60); }
+function genId(){ return 'TX'+Date.now().toString(36).toUpperCase().slice(-6); }
+function fmt12h(t) {
+  if(!t) return '';
+  var p = t.split(':'), h = parseInt(p[0], 10), m = p[1];
+  var ampm = h >= 12 ? 'PM' : 'AM';
+  h = h % 12;
+  if(h === 0) h = 12;
+  return h + ':' + m + ' ' + ampm;
+}
+function isWorkDay(s){ var dow=parseIso(s).getDay(); return (AVAIL.daysOff||[]).indexOf(dow)<0; }
+function isBlocked(ds){ 
+  if(AVAIL.disabledDates && AVAIL.disabledDates.indexOf(ds) >= 0) return true;
+  return (AVAIL.blockedDates||[]).indexOf(ds)>=0; 
+}
+function isPast(s){ return s<iso(new Date()); }
+
+var curStep=1;
+function goStep(n){
+  document.querySelectorAll('.step-view').forEach(function(el){el.classList.remove('active');});
+  document.getElementById(n===99?'stepOk':'step'+n).classList.add('active');
+  curStep=n; updateBar();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function updateBar(){
+  for(var i=1;i<=4;i++){
+    var si=document.getElementById('si'+i),sl=document.getElementById('sl'+i);
+    if(curStep>i){si.className='step-item done';if(sl)sl.className='step-line done';}
+    else if(curStep===i){si.className='step-item active';if(sl)sl.className='step-line';}
+    else{si.className='step-item';if(sl)sl.className='step-line';}
+  }
+  document.getElementById('stepsBar').style.display=curStep===99?'none':'flex';
+}
+
+// Step 1
+function renderServices(){
+  document.getElementById('serviceGrid').innerHTML=SERVICES.map(function(s){
+    return '<div class="service-card" data-id="'+s.id+'" onclick="pickSvc(\''+s.id+'\')"><div><div class="sv-name">'+s.name+'</div><div class="sv-dur">~'+s.duration+' min</div></div><div class="sv-badge">'+s.priceLabel+'</div></div>';
+  }).join('');
+}
+window.pickSvc=function(id){
+  selSvc=SERVICES.filter(function(s){return s.id===id;})[0];
+  document.querySelectorAll('.service-card').forEach(function(el){el.classList.toggle('selected',el.dataset.id===id);});
+  document.getElementById('s1Next').disabled=false;
+};
+document.getElementById('s1Next').onclick=function(){goStep(2);renderCal();};
+
+// Step 2
+var DOW=['LUN','MAR','MIE','JUE','VIE','SAB','DOM'];
+function renderCal(){
+  var y=calRef.getFullYear(),m=calRef.getMonth();
+  document.getElementById('calMonthLbl').textContent=MONTHS_ES[m]+' '+y;
+  var first=new Date(y,m,1),last=new Date(y,m+1,0);
+  var startDow=(first.getDay()+6)%7;
+  var html=DOW.map(function(d){return '<div class="cal-dow">'+d+'</div>';}).join('');
+  for(var i=0;i<startDow;i++) html+='<div class="cal-day out"></div>';
+  for(var d=1;d<=last.getDate();d++){
+    var ds=iso(new Date(y,m,d));
+    var cls='cal-day';
+    if(isPast(ds)) cls+=' past';
+    else if(isBlocked(ds)||!isWorkDay(ds)) cls+=' blocked';
+    else cls+=' open';
+    if(ds===selDate) cls+=' selected';
+    if(ds===iso(new Date())) cls+=' today';
+    html+='<div class="'+cls+'" data-date="'+ds+'" onclick="pickDate(\''+ds+'\')">'+d+'</div>';
+  }
+  document.getElementById('calGrid').innerHTML=html;
+}
+window.pickDate=function(ds){
+  if(isPast(ds)||isBlocked(ds)||!isWorkDay(ds)) return;
+  selDate=ds; selSlot=null;
+  document.getElementById('s2Next').disabled=false; renderCal();
+};
+document.getElementById('calPrev').onclick=function(){calRef.setMonth(calRef.getMonth()-1);renderCal();};
+document.getElementById('calNext').onclick=function(){calRef.setMonth(calRef.getMonth()+1);renderCal();};
+document.getElementById('s2Next').onclick=function(){goStep(3);renderSlots();};
+document.getElementById('s2Back').onclick=function(){goStep(1);};
+
+// Step 3
+async function getTaken(ds){
+  if(!sbOk) return [];
+  try{
+    var r=await sbClient.from('appointments').select('start_time').eq('date',ds).in('status', ['scheduled', 'completed']);
+    return (r.data||[]).map(function(row){return row.start_time;});
+  }catch(e){return [];}
+}
+
+// Funciones Anti-Spam
+function checkSpamLimit() {
+  return true; // Temporalmente desactivado para pruebas
+  /*
+  try {
+    var bookings = JSON.parse(localStorage.getItem('lumen.taxes.recentBookings')) || [];
+    var now = Date.now();
+    bookings = bookings.filter(function(t) { return now - t < 24 * 60 * 60 * 1000; }); // Ultimas 24h
+    localStorage.setItem('lumen.taxes.recentBookings', JSON.stringify(bookings));
+    return bookings.length < 2;
+  } catch(e) { return true; }
+  */
+}
+function recordBooking() {
+  try {
+    var bookings = JSON.parse(localStorage.getItem('lumen.taxes.recentBookings')) || [];
+    bookings.push(Date.now());
+    localStorage.setItem('lumen.taxes.recentBookings', JSON.stringify(bookings));
+  } catch(e) {}
+}
+
+async function renderSlots(){
+  document.getElementById('s3Label').textContent=selDate?'Horarios para el '+fmtDate(selDate):'';
+  document.getElementById('slotsContainer').innerHTML='<div class="slots-loading">Verificando disponibilidad...</div>';
+  document.getElementById('s3Next').disabled=true;
+  var taken=await getTaken(selDate);
+  
+  var now = new Date();
+  var isToday = (selDate === iso(now));
+  var currentMins = now.getHours() * 60 + now.getMinutes();
+  
+  var allSlots=[], mins=AVAIL.startHour*60;
+  
+  var breakStartMins = -1;
+  var breakEndMins = -1;
+  if(AVAIL.breakStart && AVAIL.breakEnd) {
+    breakStartMins = parseInt(AVAIL.breakStart.split(':')[0],10)*60 + parseInt(AVAIL.breakStart.split(':')[1],10);
+    breakEndMins = parseInt(AVAIL.breakEnd.split(':')[0],10)*60 + parseInt(AVAIL.breakEnd.split(':')[1],10);
+  }
+
+  while(mins+AVAIL.slotMinutes<=AVAIL.endHour*60){ 
+    var slotEndMins = mins + AVAIL.slotMinutes;
+    var isBreak = false;
+    if(breakStartMins >= 0 && breakEndMins >= 0) {
+      if(mins >= breakStartMins && mins < breakEndMins) isBreak = true;
+      if(slotEndMins > breakStartMins && slotEndMins <= breakEndMins) isBreak = true;
+      if(mins <= breakStartMins && slotEndMins >= breakEndMins) isBreak = true;
+    }
+
+    if (!isBreak && (!isToday || mins > currentMins)) {
+      allSlots.push(pad(Math.floor(mins/60))+':'+pad(mins%60)); 
+    }
+    mins+=AVAIL.slotMinutes; 
+  }
+  if(!allSlots.length){document.getElementById('slotsContainer').innerHTML='<div class="slots-loading">No hay horarios para este dia.</div>';return;}
+  document.getElementById('slotsContainer').innerHTML='<div class="slots-grid">'+allSlots.map(function(t){
+    var tk=taken.indexOf(t)>=0;
+    return '<div class="slot'+(tk?' taken':'')+'" data-time="'+t+'"'+(tk?'':' onclick="pickSlot(\''+t+'\')"')+'>'+fmt12h(t)+(tk?'<br><span style="font-size:10px">Ocupado</span>':'')+'</div>';
+  }).join('')+'</div>';
+}
+window.pickSlot=function(t){
+  selSlot=t;
+  document.querySelectorAll('.slot').forEach(function(el){el.classList.toggle('selected',el.dataset.time===t);});
+  document.getElementById('s3Next').disabled=false;
+};
+document.getElementById('s3Next').onclick=function(){goStep(4);renderSummary();};
+document.getElementById('s3Back').onclick=function(){goStep(2);};
+
+// Step 4
+function renderSummary(){
+  var end=selSlot?addMins(selSlot,selSvc?selSvc.duration:60):'';
+  document.getElementById('bookSummary').innerHTML='<div class="summary-row"><span class="k">Servicio</span><span class="v">'+(selSvc?selSvc.name:'')+'</span></div><div class="summary-row"><span class="k">Precio</span><span class="v">'+(selSvc?selSvc.priceLabel:'')+'</span></div><div class="summary-row"><span class="k">Fecha</span><span class="v">'+(selDate?fmtDate(selDate):'')+'</span></div><div class="summary-row"><span class="k">Horario</span><span class="v">'+(selSlot?fmt12h(selSlot):'')+' - '+fmt12h(end)+'</span></div>';
+}
+document.getElementById('s4Back').onclick=function(){goStep(3);};
+document.getElementById('s4Submit').onclick=async function(){
+  var name=document.getElementById('bName').value.trim();
+  var phone=document.getElementById('bPhone').value.trim();
+  var notes=document.getElementById('bNotes').value.trim();
+  var errEl=document.getElementById('formErr');
+  errEl.classList.remove('show');
+  if(!name){errEl.textContent='Por favor escribe tu nombre completo.';errEl.classList.add('show');return;}
+  if(!phone){errEl.textContent='Por favor escribe tu telefono.';errEl.classList.add('show');return;}
+
+  if (!checkSpamLimit()) {
+    errEl.textContent="Has alcanzado el límite de 2 solicitudes por día. Por favor contáctanos directamente.";
+    errEl.classList.add('show');
+    return;
+  }
+
+  var btn=document.getElementById('s4Submit');
+  btn.disabled=true;btn.innerHTML='<span class="spinner"></span> Enviando...';
+  var end=addMins(selSlot,selSvc?selSvc.duration:60);
+  var bid=genId();
+  var data={
+    id:bid, client_name:name, phone:phone,
+    service:selSvc?selSvc.name:'', price:selSvc?selSvc.price:null,
+    date:selDate, start_time:selSlot, end_time:end,
+    status:'pending', notes:notes, source:'booking',
+    created_at:new Date().toISOString()
+  };
+  try{
+    if(sbOk){ var r=await sbClient.from('appointments').insert(data); if(r.error) throw r.error; }
+    recordBooking(); // Registrar la cita exitosa para el Anti-Spam
+    document.getElementById('bidDisplay').textContent=bid;
+    goStep(99);
+  }catch(e){
+    btn.disabled=false;btn.innerHTML='Confirmar cita';
+    errEl.textContent='Error al enviar. Intenta de nuevo o llama directamente.';errEl.classList.add('show');
+  }
+};
+renderServices();
+</script>
+</body>
+</html>
