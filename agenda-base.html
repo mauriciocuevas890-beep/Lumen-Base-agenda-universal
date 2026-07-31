@@ -589,6 +589,22 @@
           <button id="ajAddServiceBtn" class="btn-primary" style="margin-top:10px;background:var(--card);color:var(--ink);border:1px solid var(--border);">+ Añadir Servicio</button>
         </div>
 
+        
+        <div style="margin-top:30px;">
+          <h3 style="margin-bottom:15px;font-size:16px;">Logo Público</h3>
+          <p style="font-size:12px;color:var(--muted);margin-bottom:10px;">Sube una imagen para tu portal de citas (idealmente cuadrada).</p>
+          <div style="display:flex; gap:15px; align-items:center;">
+            <div id="ajLogoPreviewBox" style="width:60px;height:60px;border-radius:10px;border:1px solid var(--border);background:var(--card);display:flex;align-items:center;justify-content:center;overflow:hidden;">
+              <span id="ajLogoEmpty" style="font-size:10px;color:var(--muted)">Sin Logo</span>
+              <img id="ajLogoPreview" style="display:none;width:100%;height:100%;object-fit:cover;" />
+            </div>
+            <div style="display:flex;flex-direction:column;gap:8px;">
+              <input type="file" id="ajLogoInput" accept="image/*" style="font-size:12px;" />
+              <button id="ajLogoRemoveBtn" style="background:#fee2e2;color:#dc2626;border:none;border-radius:6px;padding:6px 10px;font-size:11px;cursor:pointer;font-weight:600;align-self:flex-start;display:none;">Quitar Logo</button>
+            </div>
+          </div>
+        </div>
+
         <div style="margin-top:30px;">
           <h3 style="margin-bottom:15px;font-size:16px;">Mensaje de WhatsApp</h3>
           <p style="font-size:12px;color:var(--muted);margin-bottom:10px;">Personaliza el mensaje que se enviará al cliente al confirmar su cita. Usa las variables: <strong>{nombre}</strong>, <strong>{servicio}</strong>, <strong>{fecha}</strong>, <strong>{hora}</strong></p>
@@ -700,6 +716,7 @@ const DAYS_LONG = ["domingo","lunes","martes","miércoles","jueves","viernes","s
 
 let PRICES = {};
 let SERVICES = [];
+let LOGO_BASE64 = null;
 const DEFAULT_SERVICES = [
   { name: "Declaración Personal", price: 50, duration: "30 mins" },
   { name: "Declaración Negocio", price: 150, duration: "60 mins" },
@@ -1405,6 +1422,20 @@ async function loadAjustes() {
       if(v.disabledDates) document.getElementById('ajDisabledDates').value = (v.disabledDates || []).join(', ');
       if(v.whatsappMsg) document.getElementById('ajWhatsappMsg').value = v.whatsappMsg;
       
+      if(v.logoBase64) {
+        LOGO_BASE64 = v.logoBase64;
+        document.getElementById('ajLogoPreview').src = LOGO_BASE64;
+        document.getElementById('ajLogoPreview').style.display = 'block';
+        document.getElementById('ajLogoEmpty').style.display = 'none';
+        document.getElementById('ajLogoRemoveBtn').style.display = 'block';
+      } else {
+        LOGO_BASE64 = null;
+        document.getElementById('ajLogoPreview').src = '';
+        document.getElementById('ajLogoPreview').style.display = 'none';
+        document.getElementById('ajLogoEmpty').style.display = 'block';
+        document.getElementById('ajLogoRemoveBtn').style.display = 'none';
+      }
+
       SERVICES = v.services || DEFAULT_SERVICES;
       renderAjustesServices();
     } else {
@@ -1413,6 +1444,30 @@ async function loadAjustes() {
     }
   } catch(e) { console.error('Error loading config', e); }
 }
+
+
+document.getElementById('ajLogoInput').addEventListener('change', function(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(evt) {
+    LOGO_BASE64 = evt.target.result;
+    document.getElementById('ajLogoPreview').src = LOGO_BASE64;
+    document.getElementById('ajLogoPreview').style.display = 'block';
+    document.getElementById('ajLogoEmpty').style.display = 'none';
+    document.getElementById('ajLogoRemoveBtn').style.display = 'block';
+  };
+  reader.readAsDataURL(file);
+});
+
+document.getElementById('ajLogoRemoveBtn').addEventListener('click', function() {
+  LOGO_BASE64 = null;
+  document.getElementById('ajLogoInput').value = '';
+  document.getElementById('ajLogoPreview').src = '';
+  document.getElementById('ajLogoPreview').style.display = 'none';
+  document.getElementById('ajLogoEmpty').style.display = 'block';
+  this.style.display = 'none';
+});
 
 document.getElementById('ajSaveBtn').addEventListener('click', async function(){
   const btn = this;
@@ -1436,6 +1491,7 @@ document.getElementById('ajSaveBtn').addEventListener('click', async function(){
     breakEnd: document.getElementById('ajBreakEnd').value || null,
     disabledDates: disabledDates,
     whatsappMsg: document.getElementById('ajWhatsappMsg').value || '',
+    logoBase64: LOGO_BASE64,
     services: SERVICES
   };
   
