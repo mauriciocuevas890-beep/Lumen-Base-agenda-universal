@@ -588,6 +588,14 @@
           </div>
           <button id="ajAddServiceBtn" class="btn-primary" style="margin-top:10px;background:var(--card);color:var(--ink);border:1px solid var(--border);">+ Añadir Servicio</button>
         </div>
+
+        <div style="margin-top:30px;">
+          <h3 style="margin-bottom:15px;font-size:16px;">Mensaje de WhatsApp</h3>
+          <p style="font-size:12px;color:var(--muted);margin-bottom:10px;">Personaliza el mensaje que se enviará al cliente al confirmar su cita. Usa las variables: <strong>{nombre}</strong>, <strong>{servicio}</strong>, <strong>{fecha}</strong>, <strong>{hora}</strong></p>
+          <div class="field" style="margin-bottom:15px;">
+            <textarea id="ajWhatsappMsg" rows="3" placeholder="Hola {nombre}, tu cita de {servicio} para el {fecha} a las {hora} ha sido confirmada. ¡Te esperamos!" style="width:100%;padding:10px;border-radius:8px;border:1px solid var(--border);font-family:inherit;font-size:13px;resize:vertical;"></textarea>
+          </div>
+        </div>
         
         <div style="margin-top:30px;">
           <button id="ajSaveBtn" class="btn-primary" style="width:100%">Guardar Ajustes</button>
@@ -1196,7 +1204,9 @@ function renderSolicitudesView(list) {
     return;
   }
   container.innerHTML = list.map(function(s) { 
-    var waLink = "https://wa.me/" + s.phone.replace(/\\D/g, '') + "?text=" + encodeURIComponent("Hola " + s.client_name + ", tu cita de " + s.service + " para el " + s.date + " a las " + s.start_time + " ha sido confirmada. ¡Te esperamos!");
+    var waTemplate = (document.getElementById('ajWhatsappMsg') && document.getElementById('ajWhatsappMsg').value) || 'Hola {nombre}, tu cita de {servicio} para el {fecha} a las {hora} ha sido confirmada. ¡Te esperamos!';
+    var waText = waTemplate.replace('{nombre}', s.client_name).replace('{servicio}', s.service).replace('{fecha}', s.date).replace('{hora}', fmt12h(s.start_time));
+    var waLink = "https://wa.me/" + s.phone.replace(/\\D/g, '') + "?text=" + encodeURIComponent(waText);
     return '<div class="card" style="margin-bottom:16px;display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap"><div><div style="font-weight:700;font-size:16px">' + s.client_name + '</div><div style="font-size:13px;color:var(--muted);margin-top:4px">' + s.phone + '</div><div style="font-size:13.5px;margin-top:8px">' + s.service + ' &mdash; <strong>' + s.date + '</strong> a las <strong>' + fmt12h(s.start_time) + '</strong></div>' + (s.notes ? '<div style="font-size:12px;color:var(--muted);margin-top:6px;font-style:italic">' + s.notes + '</div>' : '') + '<div style="font-size:11px;color:var(--muted);margin-top:8px">ID: ' + s.id + '</div></div><div style="display:flex;gap:10px;flex-shrink:0;margin-top:4px;flex-wrap:wrap"><a href="' + waLink + '" target="_blank" style="background:#25D366;color:#fff;border:none;border-radius:10px;padding:10px 18px;font-family:inherit;font-weight:700;font-size:13px;text-decoration:none;display:inline-block">WhatsApp</a><button onclick="aprobarSolicitud(\'' + s.id + '\')" style="background:var(--green);color:#fff;border:none;border-radius:10px;padding:10px 18px;font-family:inherit;font-weight:700;font-size:13px;cursor:pointer">Aprobar</button><button onclick="rechazarSolicitud(\'' + s.id + '\')" style="background:var(--card);color:var(--muted);border:1px solid var(--border);border-radius:10px;padding:10px 18px;font-family:inherit;font-weight:600;font-size:13px;cursor:pointer">Rechazar</button></div></div>'; 
   }).join('');
 }
@@ -1393,6 +1403,7 @@ async function loadAjustes() {
       if(v.breakStart) document.getElementById('ajBreakStart').value = v.breakStart;
       if(v.breakEnd) document.getElementById('ajBreakEnd').value = v.breakEnd;
       if(v.disabledDates) document.getElementById('ajDisabledDates').value = (v.disabledDates || []).join(', ');
+      if(v.whatsappMsg) document.getElementById('ajWhatsappMsg').value = v.whatsappMsg;
       
       SERVICES = v.services || DEFAULT_SERVICES;
       renderAjustesServices();
@@ -1423,7 +1434,9 @@ document.getElementById('ajSaveBtn').addEventListener('click', async function(){
     daysOff: daysOff,
     breakStart: document.getElementById('ajBreakStart').value || null,
     breakEnd: document.getElementById('ajBreakEnd').value || null,
-    disabledDates: disabledDates
+    disabledDates: disabledDates,
+    whatsappMsg: document.getElementById('ajWhatsappMsg').value || '',
+    services: SERVICES
   };
   
   if(!sbOk) return;
