@@ -1,0 +1,4 @@
+[[redirects]]
+  from = "/"
+  to = "/agenda-base.html"
+  status = 200
