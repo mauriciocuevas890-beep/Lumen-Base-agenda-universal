@@ -579,7 +579,11 @@
         <h3 style="margin-bottom:15px;font-size:16px;margin-top:25px;">Días Festivos / Vacaciones</h3>
         <p style="font-size:12px;color:var(--muted);margin-bottom:10px;">Escribe las fechas exactas (YYYY-MM-DD) separadas por coma en las que no trabajarás.</p>
         <div class="field" style="margin-bottom:15px;">
-          <textarea id="ajDisabledDates" placeholder="Ejemplo: 2026-12-25, 2026-01-01"></textarea>
+          <div style="display:flex;gap:8px;margin-bottom:8px;">
+            <input type="date" id="ajGlobalDateInput" style="flex:1;padding:10px;border-radius:6px;border:1px solid var(--border);font-family:inherit;font-size:14px;">
+            <button type="button" onclick="addGlobalDisabledDate()" style="background:var(--blue);color:#fff;border:none;padding:10px 16px;border-radius:6px;cursor:pointer;font-weight:bold;">Agregar</button>
+          </div>
+          <div id="ajGlobalDisabledDatesList" style="display:flex;gap:6px;flex-wrap:wrap;"></div>
         </div>
 
         
@@ -772,9 +776,19 @@ function renderAjStaff() {
           </label>
         `).join('')}
       </div>
-      <div style="font-size:13px;font-weight:600;margin-bottom:4px;">Fechas Libres (YYYY-MM-DD)</div>
-      <div style="font-size:11px;color:var(--muted);margin-bottom:6px;">Separadas por comas (Ej: 2026-09-15, 2026-10-01)</div>
-      <input type="text" value="${(s.disabledDates||[]).join(', ')}" onchange="updateStaffDisabledDates(${i}, this.value)" style="width:100%;padding:8px;border-radius:6px;border:1px solid var(--border);font-family:inherit;font-size:13px;">
+      <div style="font-size:13px;font-weight:600;margin-bottom:4px;">Fechas Específicas Libres</div>
+      <div style="display:flex;gap:8px;margin-bottom:8px;">
+        <input type="date" id="staffDateInput_${i}" style="flex:1;padding:8px;border-radius:6px;border:1px solid var(--border);font-family:inherit;font-size:13px;">
+        <button onclick="addStaffDisabledDate(${i})" style="background:var(--blue);color:#fff;border:none;padding:8px 12px;border-radius:6px;cursor:pointer;font-size:13px;font-weight:600;">Agregar</button>
+      </div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;">
+        ${(s.disabledDates||[]).map(date => `
+          <div style="background:var(--bg);border:1px solid var(--border);padding:4px 8px;border-radius:4px;font-size:12px;display:flex;align-items:center;gap:6px;">
+            ${date}
+            <button onclick="removeStaffDisabledDate(${i}, '${date}')" style="background:none;border:none;color:#dc2626;cursor:pointer;padding:0;font-weight:bold;">x</button>
+          </div>
+        `).join('')}
+      </div>
     </div>
   `).join('');
   
@@ -790,8 +804,51 @@ function renderAjStaff() {
       STAFF[i].daysOff = STAFF[i].daysOff.filter(d => d !== dayIdx);
     }
   };
-  window.updateStaffDisabledDates = function(i, val) {
-    STAFF[i].disabledDates = val.split(',').map(s => s.trim()).filter(s => s.length > 0);
+  window.addStaffDisabledDate = function(i) {
+    const input = document.getElementById('staffDateInput_'+i);
+    if(input && input.value) {
+      if(!STAFF[i].disabledDates) STAFF[i].disabledDates = [];
+      if(!STAFF[i].disabledDates.includes(input.value)) {
+        STAFF[i].disabledDates.push(input.value);
+        STAFF[i].disabledDates.sort();
+        renderAjStaff();
+        document.getElementById('staffSettings_'+i).style.display = 'block';
+      }
+    }
+  };
+  window.removeStaffDisabledDate = function(i, date) {
+    if(STAFF[i].disabledDates) {
+      STAFF[i].disabledDates = STAFF[i].disabledDates.filter(d => d !== date);
+      renderAjStaff();
+      document.getElementById('staffSettings_'+i).style.display = 'block';
+    }
+  };
+  
+  window.GLOBAL_DISABLED_DATES = [];
+  window.renderGlobalDisabledDates = function() {
+    const container = document.getElementById('ajGlobalDisabledDatesList');
+    if(!container) return;
+    container.innerHTML = window.GLOBAL_DISABLED_DATES.map(date => `
+      <div style="background:var(--card);border:1px solid var(--border);padding:6px 10px;border-radius:4px;font-size:13px;display:flex;align-items:center;gap:8px;">
+        ${date}
+        <button onclick="removeGlobalDisabledDate('${date}')" style="background:none;border:none;color:#dc2626;cursor:pointer;padding:0;font-weight:bold;font-size:14px;">x</button>
+      </div>
+    `).join('');
+  };
+  window.addGlobalDisabledDate = function() {
+    const input = document.getElementById('ajGlobalDateInput');
+    if(input && input.value) {
+      if(!window.GLOBAL_DISABLED_DATES.includes(input.value)) {
+        window.GLOBAL_DISABLED_DATES.push(input.value);
+        window.GLOBAL_DISABLED_DATES.sort();
+        window.renderGlobalDisabledDates();
+      }
+      input.value = '';
+    }
+  };
+  window.removeGlobalDisabledDate = function(date) {
+    window.GLOBAL_DISABLED_DATES = window.GLOBAL_DISABLED_DATES.filter(d => d !== date);
+    window.renderGlobalDisabledDates();
   };
   
   // Actualizar dropdown de filtro en agenda
@@ -1548,7 +1605,10 @@ async function loadAjustes() {
       
       if(v.breakStart) document.getElementById('ajBreakStart').value = v.breakStart;
       if(v.breakEnd) document.getElementById('ajBreakEnd').value = v.breakEnd;
-      if(v.disabledDates) document.getElementById('ajDisabledDates').value = (v.disabledDates || []).join(', ');
+      if(v.disabledDates) {
+        window.GLOBAL_DISABLED_DATES = v.disabledDates || [];
+        if (window.renderGlobalDisabledDates) window.renderGlobalDisabledDates();
+      }
       if(v.whatsappMsg) document.getElementById('ajWhatsappMsg').value = v.whatsappMsg;
       
       if(v.logoBase64) {
@@ -1611,7 +1671,7 @@ document.getElementById('ajSaveBtn').addEventListener('click', async function(){
   const daysOff = [];
   document.querySelectorAll('#ajDaysOffContainer input[type="checkbox"]:checked').forEach(b => daysOff.push(Number(b.value)));
   
-  const disabledDates = document.getElementById('ajDisabledDates').value.split(',').map(s=>s.trim()).filter(Boolean);
+  const disabledDates = window.GLOBAL_DISABLED_DATES || [];
   
   const configVal = {
     startHour: startStr ? parseInt(startStr.split(':')[0], 10) : 8,
