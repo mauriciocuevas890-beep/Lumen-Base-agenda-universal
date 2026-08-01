@@ -249,6 +249,88 @@ var DAYS_ES=['domingo','lunes','martes','miercoles','jueves','viernes','sabado']
 function fmtDate(s){ var d=parseIso(s); return DAYS_ES[d.getDay()]+' '+d.getDate()+' de '+MONTHS_ES[d.getMonth()]; }
 function addMins(t,m){ var p=t.split(':').map(Number),tot=p[0]*60+p[1]+m; return pad(Math.floor(tot/60))+':'+pad(tot%60); }
 function genId(){ return 'TX'+Date.now().toString(36).toUpperCase().slice(-6); }
+
+async function loadManageAppt(id) {
+  try {
+    var r = await sbClient.from('appointments').select('*').eq('id', id).single();
+    if (r.error || !r.data) throw new Error('No found');
+    var a = r.data;
+    
+    // Check if cancelled
+    if (a.status === 'cancelled') {
+      document.getElementById('manageContent').innerHTML = '<div style="color:var(--muted);margin-bottom:20px;">Esta cita ya se encuentra cancelada.</div>';
+      return;
+    }
+    
+    let staffName = '';
+    let notes = a.notes || '';
+    const match = notes.match(/\\[Staff: (.*?)\\]/);
+    if(match) { staffName = match[1]; }
+    
+    let html = `
+      <div style="text-align:left; background:var(--bg); padding:15px; border-radius:10px; margin-bottom:20px;">
+        <div style="font-weight:600; margin-bottom:5px;">${a.service}</div>
+        ${staffName ? '<div style="font-size:13px; color:var(--muted);">Especialista: '+staffName+'</div>' : ''}
+        <div style="font-size:13px; color:var(--muted); margin-top:10px;">🗓️ ${fmtDateStr(a.date)}</div>
+        <div style="font-size:13px; color:var(--muted); margin-bottom:10px;">⏰ ${fmt12h(a.start_time)}</div>
+      </div>
+      <div style="display:flex; gap:10px; flex-direction:column;">
+        <button class="btn-primary" onclick="rescheduleManage(${a.price})" style="background:var(--blue);">Reprogramar Cita</button>
+        <button class="btn-primary" onclick="cancelManage('${id}')" style="background:transparent; color:var(--text); border:1px solid var(--border);">Cancelar Cita</button>
+      </div>
+    `;
+    
+    // Store variables for rescheduling
+    window._manageData = a;
+    
+    document.getElementById('manageContent').innerHTML = html;
+  } catch(e) {
+    document.getElementById('manageContent').innerHTML = '<div style="color:var(--muted);">No se encontró la cita o el enlace es inválido.</div>';
+  }
+}
+
+window.cancelManage = async function(id) {
+  if(!confirm('¿Estás seguro que deseas cancelar tu cita?')) return;
+  document.getElementById('manageContent').innerHTML = '<span class="spinner" style="border-color:var(--blue); border-bottom-color:transparent; display:inline-block;"></span> Cancelando...';
+  try {
+    await sbClient.from('appointments').update({status: 'cancelled'}).eq('id', id);
+    document.getElementById('manageContent').innerHTML = '<div style="color:var(--green); font-weight:600;">Cita cancelada exitosamente.</div>';
+  } catch(e) {
+    alert('Error al cancelar. Intenta de nuevo.');
+  }
+};
+
+window.rescheduleManage = function(price) {
+  var a = window._manageData;
+  
+  // Try to find the service and staff in the current lists to set selSvc and selStaff
+  selSvc = SERVICES.find(s => s.name === a.service);
+  if (!selSvc) selSvc = {name: a.service, duration: 60, price: price}; // Fallback
+  
+  let notes = a.notes || '';
+  const match = notes.match(/\\[Staff: (.*?)\\]/);
+  if (match) {
+    selStaff = STAFF.find(s => s.name === match[1]);
+    if (!selStaff) selStaff = {name: match[1]};
+  }
+  
+  // Pre-fill form fields
+  document.getElementById('bName').value = a.client_name;
+  document.getElementById('bPhone').value = a.phone;
+  let finalNotes = notes.replace(/\\[Staff: (.*?)\\]/, '').trim();
+  document.getElementById('bNotes').value = finalNotes;
+  
+  // Show progress bar and go to Step 2 (Calendar)
+  document.getElementById('manageView').classList.remove('active');
+  document.getElementById('stepsBar').style.display = 'flex';
+  goStep(2);
+  renderCal();
+};
+
+function fmtDateStr(ds) {
+  var d = parseIso(ds);
+  return DAYS_ES[d.getDay()]+', '+d.getDate()+' de '+MONTHS_ES[d.getMonth()]+' '+d.getFullYear();
+}
 function fmt12h(t) {
   if(!t) return '';
   var p = t.split(':'), h = parseInt(p[0], 10), m = p[1];
