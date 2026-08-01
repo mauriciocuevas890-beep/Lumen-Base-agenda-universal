@@ -726,6 +726,19 @@ let PRICES = {};
 let SERVICES = [];
 let LOGO_BASE64 = null;
 let STAFF = [];
+function renderAjStaff() {
+  const container = document.getElementById('ajStaffList');
+  container.innerHTML = STAFF.map((s, i) => `
+    <div style="display:flex;gap:10px;align-items:center;background:var(--bg);padding:10px;border-radius:8px;border:1px solid var(--border);">
+      <input type="text" placeholder="Nombre" value="${s.name}" style="flex:1;padding:8px;border-radius:6px;border:1px solid var(--border);" onchange="updateStaff(${i}, 'name', this.value)">
+      <button onclick="removeStaff(${i})" style="background:#fee2e2;color:#dc2626;border:none;padding:8px 12px;border-radius:6px;cursor:pointer;font-weight:bold;">X</button>
+    </div>
+  `).join('');
+}
+window.updateStaff = function(i, field, val) { STAFF[i][field] = val; };
+window.removeStaff = function(i) { STAFF.splice(i, 1); renderAjStaff(); };
+document.getElementById('ajAddStaffBtn').addEventListener('click', function() { STAFF.push({name:''}); renderAjStaff(); });
+
 const DEFAULT_SERVICES = [
   { name: "Declaración Personal", price: 50, duration: "30 mins" },
   { name: "Declaración Negocio", price: 150, duration: "60 mins" },
