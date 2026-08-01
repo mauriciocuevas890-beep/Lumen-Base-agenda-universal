@@ -1242,7 +1242,7 @@ function renderDayList(){
 
     return `
     <div class="appt">
-      <div class="time">${fmt12h(a.startTime)}<div class="end">${fmt12h(endT2)}</div></div>
+      <div class="time">${fmt12h(a.startTime)}<div class="end">hasta las ${fmt12h(endT2)}</div></div>
       <div class="avatar">${initials(a.clientName)}</div>
       <div class="info">
         <div class="nm">${escapeHtml(a.clientName)}</div>
@@ -1328,7 +1328,7 @@ function renderNext(){
     <div class="label">Siguiente en la agenda</div>
     <div class="big">${fmt12h(n.startTime)}</div>
     <div class="nm">${escapeHtml(n.clientName)}</div>
-    <div class="sv">${escapeHtml(n.service)}${n.price?" · "+fmt$(n.price):""} · hasta ${fmt12h(endT)}</div>
+    <div class="sv">${escapeHtml(n.service)}${n.price?" &middot; "+fmt$(n.price):""} &middot; hasta las ${fmt12h(endT)}</div>
     <div class="progress"><div class="bar" style="width:${pct}%"></div></div>`;
 }
 
