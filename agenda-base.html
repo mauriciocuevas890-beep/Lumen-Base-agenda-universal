@@ -1231,8 +1231,9 @@ function renderSolicitudesView(list) {
   }
   container.innerHTML = list.map(function(s) { 
     var waTemplate = (document.getElementById('ajWhatsappMsg') && document.getElementById('ajWhatsappMsg').value) || 'Hola {nombre}, tu cita de {servicio} para el {fecha} a las {hora} ha sido confirmada. ¡Te esperamos!';
-    var waText = waTemplate.replace('{nombre}', s.client_name).replace('{servicio}', s.service).replace('{fecha}', s.date).replace('{hora}', fmt12h(s.start_time));
-    var waLink = "https://wa.me/" + s.phone.replace(/\\D/g, '') + "?text=" + encodeURIComponent(waText);
+    var link_gestion = window.location.origin + window.location.pathname.replace(/\/[^/]*$/, '/booking.html') + '?manage=' + s.id;
+    var waText = waTemplate.replace('{nombre}', s.client_name).replace('{servicio}', s.service).replace('{fecha}', s.date).replace('{hora}', fmt12h(s.start_time)).replace('{link_gestion}', link_gestion);
+    var waLink = "https://wa.me/" + s.phone.replace(/\D/g, '') + "?text=" + encodeURIComponent(waText);
     return '<div class="card" style="margin-bottom:16px;display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap"><div><div style="font-weight:700;font-size:16px">' + s.client_name + '</div><div style="font-size:13px;color:var(--muted);margin-top:4px">' + s.phone + '</div><div style="font-size:13.5px;margin-top:8px">' + s.service + ' &mdash; <strong>' + s.date + '</strong> a las <strong>' + fmt12h(s.start_time) + '</strong></div>' + (s.notes ? '<div style="font-size:12px;color:var(--muted);margin-top:6px;font-style:italic">' + s.notes + '</div>' : '') + '<div style="font-size:11px;color:var(--muted);margin-top:8px">ID: ' + s.id + '</div></div><div style="display:flex;gap:10px;flex-shrink:0;margin-top:4px;flex-wrap:wrap"><a href="' + waLink + '" target="_blank" style="background:#25D366;color:#fff;border:none;border-radius:10px;padding:10px 18px;font-family:inherit;font-weight:700;font-size:13px;text-decoration:none;display:inline-block">WhatsApp</a><button onclick="aprobarSolicitud(\'' + s.id + '\')" style="background:var(--green);color:#fff;border:none;border-radius:10px;padding:10px 18px;font-family:inherit;font-weight:700;font-size:13px;cursor:pointer">Aprobar</button><button onclick="rechazarSolicitud(\'' + s.id + '\')" style="background:var(--card);color:var(--muted);border:1px solid var(--border);border-radius:10px;padding:10px 18px;font-family:inherit;font-weight:600;font-size:13px;cursor:pointer">Rechazar</button></div></div>'; 
   }).join('');
 }
@@ -1503,7 +1504,8 @@ document.getElementById('ajSaveBtn').addEventListener('click', async function(){
     disabledDates: disabledDates,
     whatsappMsg: document.getElementById('ajWhatsappMsg').value || '',
     logoBase64: LOGO_BASE64,
-    services: SERVICES
+    services: SERVICES,
+    staff: STAFF.filter(s => s.name.trim() !== '')
   };
   
   if(!sbOk) return;
