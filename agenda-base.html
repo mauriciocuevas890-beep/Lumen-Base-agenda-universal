@@ -907,7 +907,33 @@ function renderAjStaff() {
     }
   }
 }
-window.updateStaff = function(i, field, val) { STAFF[i][field] = val; };
+window.updateStaff = function(i, field, val) { 
+  if (field === 'name') {
+    const oldName = STAFF[i].name || '';
+    const newName = val || '';
+    STAFF[i][field] = val;
+    if (oldName.trim() && oldName.trim() !== newName.trim()) {
+      const oldTag = '[Staff: ' + oldName.trim() + ']';
+      const newTag = '[Staff: ' + newName.trim() + ']';
+      let changed = false;
+      state.appts.forEach(a => {
+        if (a.notes && a.notes.includes(oldTag)) {
+          a.notes = a.notes.replace(oldTag, newTag);
+          changed = true;
+          if (sbOk) {
+            sbClient.from('appointments').update({notes: a.notes}).eq('id', a.id).then();
+          }
+        }
+      });
+      if (changed) {
+        save();
+        render(); // update calendar UI
+      }
+    }
+  } else {
+    STAFF[i][field] = val; 
+  }
+};
 window.removeStaff = function(i) {
   if(confirm('¿Estás seguro de que deseas eliminar a este especialista? Ya no podrá recibir nuevas citas.')) {
     STAFF.splice(i, 1);
