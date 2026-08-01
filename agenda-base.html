@@ -1009,12 +1009,30 @@ function uid(){ return Date.now()+Math.floor(Math.random()*1000); }
 function toMin(t){ const [h,m]=t.split(":").map(Number); return h*60+m; }
 function fmt$(n){ const v=Number(n)||0; return "$"+(v%1===0?v.toFixed(0):v.toFixed(2)); }
 function fmt12h(t) {
-  if(!t) return '';
+  if(!t || typeof t !== 'string' || !t.includes(':')) return '';
   var p = t.split(':'), h = parseInt(p[0], 10), m = p[1];
   var ampm = h >= 12 ? 'PM' : 'AM';
   h = h % 12;
   if(h === 0) h = 12;
   return h + ':' + m + ' ' + ampm;
+}
+
+function getEndTime(start, svcName) {
+  let dur = 60;
+  if(SERVICES) {
+    const s = SERVICES.find(x=>x.name===svcName);
+    if(s && s.duration) {
+      const match = String(s.duration).match(/\d+/);
+      if(match) dur = parseInt(match[0], 10);
+    }
+  }
+  const parts = start.split(":");
+  let h = parseInt(parts[0], 10);
+  let m = parseInt(parts[1], 10);
+  let totalMin = h * 60 + m + dur;
+  let newH = Math.floor(totalMin / 60);
+  let newM = totalMin % 60;
+  return String(newH).padStart(2,'0') + ":" + String(newM).padStart(2,'0');
 }
 
 function apptsOn(dateIso){
@@ -1104,7 +1122,7 @@ function renderStats(){
   el.innerHTML = `
     <div class="stat today">
       <div class="label">Hoy · ${(DAYS_LONG[now.getDay()]+", "+now.getDate()+" de "+MONTHS[now.getMonth()].toLowerCase()).toUpperCase()}</div>
-      <div class="big">${pend.length} pendientes</div>
+      <div class="big">${pend.length} citas</div>
       <div class="foot"><b>${comp.length} completadas</b> de ${active.length} en total</div>
     </div>
     <div class="stat">
@@ -1299,11 +1317,13 @@ function renderNext(){
     const denom=(startMin-dayStart);
     if(denom>0) pct=Math.max(6, Math.min(96, ((nowMin-dayStart)/denom)*100));
   }
+  let endT = n.endTime;
+  if(!endT || !endT.includes(":")) endT = getEndTime(n.startTime, n.service);
   el.innerHTML=`
     <div class="label">Siguiente en la agenda</div>
     <div class="big">${fmt12h(n.startTime)}</div>
     <div class="nm">${escapeHtml(n.clientName)}</div>
-    <div class="sv">${escapeHtml(n.service)}${n.price?" · "+fmt$(n.price):""} · hasta ${fmt12h(n.endTime)}</div>
+    <div class="sv">${escapeHtml(n.service)}${n.price?" · "+fmt$(n.price):""} · hasta ${fmt12h(endT)}</div>
     <div class="progress"><div class="bar" style="width:${pct}%"></div></div>`;
 }
 
