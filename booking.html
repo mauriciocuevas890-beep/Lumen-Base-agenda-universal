@@ -101,11 +101,28 @@ body{font-family:"DM Sans",system-ui,sans-serif;background:var(--bg);color:var(-
     <div class="step-line" id="sl3"></div>
     <div class="step-item" id="si4"><div class="step-num">4</div><div class="step-label">Tus datos</div></div>
   </div>
+  
+  <div class="step-view" id="manageView">
+    <div class="card">
+      <div class="card-title">Gestionar mi Cita</div>
+      <div class="card-sub">Aquí puedes revisar, cancelar o reprogramar tu cita.</div>
+      <div id="manageContent" style="margin-top:20px; text-align:center;">
+        <span class="spinner" style="border-color:var(--blue); border-bottom-color:transparent; display:inline-block;"></span> Cargando cita...
+      </div>
+    </div>
+  </div>
+
   <div class="step-view active" id="step1">
     <div class="card">
       <div class="card-title">Que servicio necesitas?</div>
       <div class="card-sub">Selecciona el tipo de declaracion.</div>
       <div class="service-grid" id="serviceGrid"></div>
+      
+      <div id="staffSection" style="display:none;margin-top:24px;">
+        <div class="card-title" style="font-size:18px;">Con quien quieres tu cita?</div>
+        <div class="service-grid" id="staffGrid" style="margin-top:12px;"></div>
+      </div>
+
       <button class="btn-primary" id="s1Next" style="margin-top:24px" disabled>Continuar <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></button>
     </div>
   </div>
@@ -181,7 +198,8 @@ var SERVICES = [
   { id:'personalizado',name:'Personalizado',          price:null, priceLabel:'A convenir',duration:60 }
 ];
 
-var selSvc=null, selDate=null, selSlot=null, calRef=new Date();
+var selSvc=null, selStaff=null, manageId=null, selDate=null, selSlot=null, calRef=new Date();
+var STAFF = [];
 
 // Init Supabase
 try {
@@ -189,11 +207,16 @@ try {
     sbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
     sbOk = true;
     // Load availability from config table
+    const urlParams = new URLSearchParams(window.location.search);
+    manageId = urlParams.get('manage');
+    
+    // Load availability from config table
     sbClient.from('config').select('value').eq('key','availability').single().then(function(r){
       if (r.data && r.data.value) {
         var v = r.data.value;
         AVAIL = Object.assign({}, AVAIL, v);
         if (v.services) SERVICES = v.services;
+        if (v.staff) STAFF = v.staff;
         if (v.logoBase64) {
           var box = document.getElementById('headerLogoBox');
           if (box) {
@@ -202,7 +225,15 @@ try {
           }
         }
       }
-      renderServices();
+      
+      if (manageId) {
+        document.getElementById('stepsBar').style.display = 'none';
+        document.querySelectorAll('.step-view').forEach(e => e.classList.remove('active'));
+        document.getElementById('manageView').classList.add('active');
+        loadManageAppt(manageId);
+      } else {
+        renderServices();
+      }
     });
   } else {
     document.getElementById('fwWarn').classList.add('show');
@@ -258,7 +289,25 @@ function renderServices(){
 }
 window.pickSvc=function(i){
   selSvc=SERVICES[i];
-  document.querySelectorAll('.service-card').forEach(function(el){el.classList.toggle('selected',parseInt(el.dataset.id)===i);});
+  document.querySelectorAll('#serviceGrid .service-card').forEach(function(el){el.classList.toggle('selected',parseInt(el.dataset.id)===i);});
+  
+  if (STAFF && STAFF.length > 0) {
+    document.getElementById('staffSection').style.display = 'block';
+    renderStaff();
+    document.getElementById('s1Next').disabled = true; // Wait for staff selection
+  } else {
+    document.getElementById('s1Next').disabled=false;
+  }
+};
+
+function renderStaff() {
+  document.getElementById('staffGrid').innerHTML = STAFF.map(function(s, i) {
+    return '<div class="service-card" data-sid="'+i+'" onclick="pickStaff('+i+')"><div><div class="sv-name">'+s.name+'</div></div></div>';
+  }).join('');
+}
+window.pickStaff = function(i) {
+  selStaff = STAFF[i];
+  document.querySelectorAll('#staffGrid .service-card').forEach(function(el){el.classList.toggle('selected',parseInt(el.dataset.sid)===i);});
   document.getElementById('s1Next').disabled=false;
 };
 document.getElementById('s1Next').onclick=function(){goStep(2);renderCal();};
@@ -298,7 +347,11 @@ document.getElementById('s2Back').onclick=function(){goStep(1);};
 async function getTaken(ds){
   if(!sbOk) return [];
   try{
-    var r=await sbClient.from('appointments').select('start_time').eq('date',ds).in('status', ['scheduled', 'completed']);
+    let query = sbClient.from('appointments').select('start_time').eq('date',ds).in('status', ['scheduled', 'completed']);
+    if (selStaff && selStaff.name) {
+      query = query.ilike('notes', '%[Staff: ' + selStaff.name + ']%');
+    }
+    var r=await query;
     return (r.data||[]).map(function(row){return row.start_time;});
   }catch(e){return [];}
 }
@@ -374,7 +427,8 @@ document.getElementById('s3Back').onclick=function(){goStep(2);};
 // Step 4
 function renderSummary(){
   var end=selSlot?addMins(selSlot,selSvc?selSvc.duration:60):'';
-  document.getElementById('bookSummary').innerHTML='<div class="summary-row"><span class="k">Servicio</span><span class="v">'+(selSvc?selSvc.name:'')+'</span></div><div class="summary-row"><span class="k">Precio</span><span class="v">'+(selSvc?'$'+selSvc.price:'')+'</span></div><div class="summary-row"><span class="k">Fecha</span><span class="v">'+(selDate?fmtDate(selDate):'')+'</span></div><div class="summary-row"><span class="k">Horario</span><span class="v">'+(selSlot?fmt12h(selSlot):'')+' - '+fmt12h(end)+'</span></div>';
+  let staffRow = selStaff ? '<div class="summary-row"><span class="k">Especialista</span><span class="v">'+selStaff.name+'</span></div>' : '';
+  document.getElementById('bookSummary').innerHTML='<div class="summary-row"><span class="k">Servicio</span><span class="v">'+(selSvc?selSvc.name:'')+'</span></div>'+staffRow+'<div class="summary-row"><span class="k">Precio</span><span class="v">'+(selSvc?'$'+selSvc.price:'')+'</span></div><div class="summary-row"><span class="k">Fecha</span><span class="v">'+(selDate?fmtDate(selDate):'')+'</span></div><div class="summary-row"><span class="k">Horario</span><span class="v">'+(selSlot?fmt12h(selSlot):'')+' - '+fmt12h(end)+'</span></div>';
 }
 document.getElementById('s4Back').onclick=function(){goStep(3);};
 document.getElementById('s4Submit').onclick=async function(){
@@ -395,18 +449,37 @@ document.getElementById('s4Submit').onclick=async function(){
   var btn=document.getElementById('s4Submit');
   btn.disabled=true;btn.innerHTML='<span class="spinner"></span> Enviando...';
   var end=addMins(selSlot,selSvc?selSvc.duration:60);
-  var bid=genId();
+  let finalNotes = notes;
+  if (selStaff && selStaff.name) {
+    finalNotes = '[Staff: ' + selStaff.name + '] ' + finalNotes;
+  }
+  
+  var bid = manageId ? manageId : genId();
   var data={
-    id:bid, client_name:name, phone:phone,
+    client_name:name, phone:phone,
     service:selSvc?selSvc.name:'', price:selSvc?selSvc.price:null,
     date:selDate, start_time:selSlot, end_time:end,
-    status:'pending', notes:notes, source:'booking',
-    created_at:new Date().toISOString()
+    status:'pending', notes:finalNotes, source:'booking'
   };
+  
+  if (!manageId) {
+    data.id = bid;
+    data.created_at = new Date().toISOString();
+  }
+  
   try{
-    if(sbOk){ var r=await sbClient.from('appointments').insert(data); if(r.error) throw r.error; }
-    recordBooking(); // Registrar la cita exitosa para el Anti-Spam
+    if(sbOk){ 
+      var r;
+      if (manageId) {
+        r = await sbClient.from('appointments').update(data).eq('id', manageId);
+      } else {
+        r = await sbClient.from('appointments').insert(data); 
+      }
+      if(r.error) throw r.error; 
+    }
+    if (!manageId) recordBooking();
     document.getElementById('bidDisplay').textContent=bid;
+    document.getElementById('s99Title').textContent = manageId ? 'Cita reprogramada!' : 'Cita confirmada!';
     goStep(99);
   }catch(e){
     btn.disabled=false;btn.innerHTML='Confirmar cita';

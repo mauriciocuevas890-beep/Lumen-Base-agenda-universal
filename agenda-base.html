@@ -590,6 +590,14 @@
         </div>
 
         
+        
+        <div style="margin-top:30px;">
+          <h3 style="margin-bottom:15px;font-size:16px;">Especialistas (Staff)</h3>
+          <p style="font-size:12px;color:var(--muted);margin-bottom:10px;">Añade los nombres de los especialistas (opcional). Si hay al menos uno, el cliente podrá elegir con quién agendar. Deja vacío para no usar esta función.</p>
+          <div id="ajStaffList" style="display:flex;flex-direction:column;gap:10px;margin-bottom:10px;"></div>
+          <button id="ajAddStaffBtn" class="btn-primary" style="padding:6px 12px;font-size:12px;width:auto;background:var(--blue-mid);">+ Añadir Especialista</button>
+        </div>
+
         <div style="margin-top:30px;">
           <h3 style="margin-bottom:15px;font-size:16px;">Logo Público</h3>
           <p style="font-size:12px;color:var(--muted);margin-bottom:10px;">Sube una imagen para tu portal de citas (idealmente cuadrada).</p>
@@ -607,7 +615,7 @@
 
         <div style="margin-top:30px;">
           <h3 style="margin-bottom:15px;font-size:16px;">Mensaje de WhatsApp</h3>
-          <p style="font-size:12px;color:var(--muted);margin-bottom:10px;">Personaliza el mensaje que se enviará al cliente al confirmar su cita. Usa las variables: <strong>{nombre}</strong>, <strong>{servicio}</strong>, <strong>{fecha}</strong>, <strong>{hora}</strong></p>
+          <p style="font-size:12px;color:var(--muted);margin-bottom:10px;">Personaliza el mensaje que se enviará al cliente al confirmar su cita. Usa las variables: <strong>{nombre}</strong>, <strong>{servicio}</strong>, <strong>{fecha}</strong>, <strong>{hora}</strong>, <strong>{link_gestion}</strong></p>
           <div class="field" style="margin-bottom:15px;">
             <textarea id="ajWhatsappMsg" rows="3" placeholder="Hola {nombre}, tu cita de {servicio} para el {fecha} a las {hora} ha sido confirmada. ¡Te esperamos!" style="width:100%;padding:10px;border-radius:8px;border:1px solid var(--border);font-family:inherit;font-size:13px;resize:vertical;"></textarea>
           </div>
@@ -717,6 +725,7 @@ const DAYS_LONG = ["domingo","lunes","martes","miércoles","jueves","viernes","s
 let PRICES = {};
 let SERVICES = [];
 let LOGO_BASE64 = null;
+let STAFF = [];
 const DEFAULT_SERVICES = [
   { name: "Declaración Personal", price: 50, duration: "30 mins" },
   { name: "Declaración Negocio", price: 150, duration: "60 mins" },
@@ -1437,6 +1446,8 @@ async function loadAjustes() {
       }
 
       SERVICES = v.services || DEFAULT_SERVICES;
+      STAFF = v.staff || [];
+      renderAjStaff();
       renderAjustesServices();
     } else {
       SERVICES = DEFAULT_SERVICES;
