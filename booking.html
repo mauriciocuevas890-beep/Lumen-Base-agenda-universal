@@ -384,7 +384,10 @@ window.pickSvc=function(i){
 
 function renderStaff() {
   document.getElementById('staffGrid').innerHTML = STAFF.map(function(s, i) {
-    return '<div class="service-card" data-sid="'+i+'" onclick="pickStaff('+i+')"><div><div class="sv-name">'+s.name+'</div></div></div>';
+    var avatar = s.image 
+      ? '<img src="'+s.image+'" style="width:40px;height:40px;border-radius:50%;object-fit:cover;margin-right:12px;flex-shrink:0;">'
+      : '<div style="width:40px;height:40px;border-radius:50%;background:var(--blue-light);color:var(--blue);display:flex;align-items:center;justify-content:center;font-weight:bold;margin-right:12px;flex-shrink:0;">'+(s.name?s.name.charAt(0).toUpperCase():'')+'</div>';
+    return '<div class="service-card" data-sid="'+i+'" onclick="pickStaff('+i+')"><div style="display:flex;align-items:center;">'+avatar+'<div class="sv-name">'+s.name+'</div></div></div>';
   }).join('');
 }
 window.pickStaff = function(i) {
