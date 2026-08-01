@@ -1640,6 +1640,12 @@ document.getElementById("themeBtn").addEventListener("click",()=>{
   localStorage.setItem("lumen.tatuador.theme", next);
 });
 
+if(!localStorage.getItem('wiped_appts_clean')) {
+  localStorage.removeItem('lumen.taxes.appointments');
+  localStorage.setItem('wiped_appts_clean', '1');
+  state.appts = [];
+}
+
 render();
 </script>
 </body>
