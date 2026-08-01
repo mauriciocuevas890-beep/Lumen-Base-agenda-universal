@@ -415,6 +415,9 @@
           <h1 class="hero">Tu agenda, <span class="accent">al día.</span></h1>
         </div>
         <div class="top-actions">
+          <select id="staffAgendaFilter" style="padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg); color: var(--text); font-family: inherit; font-size: 13.5px; margin-right: 10px; cursor: pointer; outline: none; display: none;" onchange="state.staffFilter=this.value; renderDayList();">
+            <option value="all">Todos los especialistas</option>
+          </select>
           <button class="icon-btn" id="filterBtn" title="Filtrar citas">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
           </button>
@@ -734,6 +737,23 @@ function renderAjStaff() {
       <button onclick="removeStaff(${i})" style="background:#fee2e2;color:#dc2626;border:none;padding:8px 12px;border-radius:6px;cursor:pointer;font-weight:bold;">X</button>
     </div>
   `).join('');
+  
+  // Actualizar dropdown de filtro en agenda
+  const filterSelect = document.getElementById('staffAgendaFilter');
+  if (filterSelect) {
+    if (STAFF.length > 0) {
+      filterSelect.style.display = 'block';
+      let html = '<option value="all">Todos los especialistas</option>';
+      STAFF.forEach(s => {
+        if(s.name.trim()) html += `<option value="${s.name.trim()}">${s.name.trim()}</option>`;
+      });
+      filterSelect.innerHTML = html;
+      filterSelect.value = state.staffFilter;
+    } else {
+      filterSelect.style.display = 'none';
+      state.staffFilter = 'all';
+    }
+  }
 }
 window.updateStaff = function(i, field, val) { STAFF[i][field] = val; };
 window.removeStaff = function(i) { STAFF.splice(i, 1); renderAjStaff(); };
@@ -783,6 +803,7 @@ let state = {
   selected: iso(new Date()),
   search: "",
   filter: "all",
+  staffFilter: "all",
   clientSearch: "",
   clients: loadClients()
 };
@@ -978,6 +999,12 @@ function renderDayList(){
   document.getElementById("dayLabel").textContent = DAYS_LONG[d.getDay()]+", "+d.getDate()+" de "+MONTHS[d.getMonth()].toLowerCase();
   let list=apptsOn(state.selected);
   if(state.filter!=="all") list=list.filter(a=>a.status===state.filter);
+  if(state.staffFilter!=="all") {
+    list=list.filter(a => {
+      let notes = a.notes || '';
+      return notes.includes('[Staff: ' + state.staffFilter + ']');
+    });
+  }
   if(state.search) list=list.filter(a=>a.clientName.toLowerCase().includes(state.search.toLowerCase()));
   const wrap=document.getElementById("dayList");
   if(list.length===0){
@@ -989,13 +1016,19 @@ function renderDayList(){
       </div>`;
     return;
   }
-  wrap.innerHTML = list.map(a=>`
+  wrap.innerHTML = list.map(a=>{
+    let staffName = '';
+    let n = a.notes || '';
+    const m = n.match(/\[Staff: (.*?)\]/);
+    if(m) staffName = m[1];
+    
+    return `
     <div class="appt">
       <div class="time">${a.startTime}<div class="end">${a.endTime}</div></div>
       <div class="avatar">${initials(a.clientName)}</div>
       <div class="info">
         <div class="nm">${escapeHtml(a.clientName)}</div>
-        <div class="sv">${escapeHtml(a.service)} · ${escapeHtml(a.phone)}</div>
+        <div class="sv">${staffName ? '<strong style="color:var(--blue)">' + escapeHtml(staffName) + '</strong> &middot; ' : ''}${escapeHtml(a.service)} &middot; ${escapeHtml(a.phone)}</div>
       </div>
       <span class="badge ${a.status}">${statusLabel(a.status)}</span>
       ${a.price ? `<span class="price-tag">${fmt$(a.price)}</span>` : ""}
