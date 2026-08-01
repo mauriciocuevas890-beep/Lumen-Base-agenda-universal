@@ -756,7 +756,12 @@ function renderAjStaff() {
   }
 }
 window.updateStaff = function(i, field, val) { STAFF[i][field] = val; };
-window.removeStaff = function(i) { STAFF.splice(i, 1); renderAjStaff(); };
+window.removeStaff = function(i) {
+  if(confirm('¿Estás seguro de que deseas eliminar a este especialista? Ya no podrá recibir nuevas citas.')) {
+    STAFF.splice(i, 1);
+    renderAjStaff();
+  }
+};
 document.getElementById('ajAddStaffBtn').addEventListener('click', function() { STAFF.push({name:''}); renderAjStaff(); });
 
 const DEFAULT_SERVICES = [
@@ -774,7 +779,7 @@ function renderAjustesServices() {
         <input type="text" value="${svc.name}" placeholder="Nombre" style="flex:2;padding:8px;border-radius:6px;border:1px solid var(--border);" onchange="SERVICES[${i}].name=this.value">
         <input type="number" value="${svc.price}" placeholder="Precio" style="flex:1;padding:8px;border-radius:6px;border:1px solid var(--border);" onchange="SERVICES[${i}].price=Number(this.value)">
         <input type="text" value="${svc.duration}" placeholder="Ej: 30 mins" style="flex:1;padding:8px;border-radius:6px;border:1px solid var(--border);" onchange="SERVICES[${i}].duration=this.value">
-        <button onclick="SERVICES.splice(${i},1);renderAjustesServices();" style="padding:8px 12px;background:#fee2e2;color:#dc2626;border:none;border-radius:6px;cursor:pointer;font-weight:600;">X</button>
+        <button onclick="if(confirm('¿Estás seguro de eliminar este servicio?')){SERVICES.splice(${i},1);renderAjustesServices();}" style="padding:8px 12px;background:#fee2e2;color:#dc2626;border:none;border-radius:6px;cursor:pointer;font-weight:600;">X</button>
       </div>
     `;
   });
