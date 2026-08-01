@@ -758,7 +758,7 @@ function renderAjStaff() {
     <div style="display:flex;gap:10px;align-items:center;background:var(--bg);padding:10px;border-radius:8px;border:1px solid var(--border);">
       <div style="position:relative;width:40px;height:40px;flex-shrink:0;border-radius:50%;overflow:hidden;background:var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--muted);" onclick="document.getElementById('staffImgInput_${i}').click()" title="Subir foto">
         ${s.image ? `<img src="${s.image}" style="width:100%;height:100%;object-fit:cover;">` : `<svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>`}
-        <input type="file" id="staffImgInput_${i}" style="display:none" accept="image/*" onchange="handleStaffImg(${i}, this)">
+        <input type="file" id="staffImgInput_${i}" style="display:none" accept="image/*" onclick="event.stopPropagation()" onchange="handleStaffImg(${i}, this)">
       </div>
       <input type="text" placeholder="Nombre" value="${s.name}" style="flex:1;padding:8px;border-radius:6px;border:1px solid var(--border);" onchange="updateStaff(${i}, 'name', this.value)">
       <button onclick="removeStaff(${i})" style="background:#fee2e2;color:#dc2626;border:none;padding:8px 12px;border-radius:6px;cursor:pointer;font-weight:bold;">X</button>
