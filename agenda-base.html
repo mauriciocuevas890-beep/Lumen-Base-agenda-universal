@@ -1257,8 +1257,20 @@ async function rowAction(action, id){
 function renderNext(){
   const now=new Date();
   const nowKey=iso(now)+" "+String(now.getHours()).padStart(2,"0")+":"+String(now.getMinutes()).padStart(2,"0");
+  const currentStaffNames = STAFF.map(s => s.name.trim().toLowerCase());
   const up=state.appts
-    .filter(a=>a.status==="scheduled" && (a.date+" "+a.startTime)>=nowKey)
+    .filter(a => {
+      if (a.status !== "scheduled" || (a.date+" "+a.startTime) < nowKey) return false;
+      let n = a.notes || '';
+      const m = n.match(/\[Staff: (.*?)\]/);
+      if(m) {
+        if(!currentStaffNames.includes(m[1].trim().toLowerCase())) return false;
+        if(state.staffFilter !== "all" && m[1].trim() !== state.staffFilter) return false;
+      } else if (state.staffFilter !== "all") {
+        return false;
+      }
+      return true;
+    })
     .sort((a,b)=>(a.date+a.startTime).localeCompare(b.date+b.startTime));
   const el=document.getElementById("nextCard");
   const n=up[0];
