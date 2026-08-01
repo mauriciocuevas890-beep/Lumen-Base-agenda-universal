@@ -339,10 +339,31 @@ function fmt12h(t) {
   if(h === 0) h = 12;
   return h + ':' + m + ' ' + ampm;
 }
-function isWorkDay(s){ var dow=parseIso(s).getDay(); return (AVAIL.daysOff||[]).indexOf(dow)<0; }
+function isWorkDay(s){ 
+  var dow=parseIso(s).getDay(); 
+  if((AVAIL.daysOff||[]).indexOf(dow)>=0) return false;
+  if(selStaff && selStaff.name) {
+    if(selStaff.daysOff && selStaff.daysOff.indexOf(dow)>=0) return false;
+  } else {
+    if(STAFF && STAFF.length > 0) {
+      var allOff = STAFF.every(x => x.daysOff && x.daysOff.indexOf(dow)>=0);
+      if(allOff) return false;
+    }
+  }
+  return true;
+}
 function isBlocked(ds){ 
   if(AVAIL.disabledDates && AVAIL.disabledDates.indexOf(ds) >= 0) return true;
-  return (AVAIL.blockedDates||[]).indexOf(ds)>=0; 
+  if((AVAIL.blockedDates||[]).indexOf(ds)>=0) return true;
+  if(selStaff && selStaff.name) {
+    if(selStaff.disabledDates && selStaff.disabledDates.indexOf(ds)>=0) return true;
+  } else {
+    if(STAFF && STAFF.length > 0) {
+      var allBlocked = STAFF.every(x => x.disabledDates && x.disabledDates.indexOf(ds)>=0);
+      if(allBlocked) return true;
+    }
+  }
+  return false;
 }
 function isPast(s){ return s<iso(new Date()); }
 

@@ -760,9 +760,39 @@ function renderAjStaff() {
         <input type="file" id="staffImgInput_${i}" style="display:none" accept="image/*" onclick="event.stopPropagation()" onchange="handleStaffImg(${i}, this)">
       </div>
       <input type="text" placeholder="Nombre" value="${s.name}" style="flex:1;padding:8px;border-radius:6px;border:1px solid var(--border);" onchange="updateStaff(${i}, 'name', this.value)">
+      <button onclick="toggleStaffSettings(${i})" style="background:var(--card);color:var(--text);border:1px solid var(--border);padding:8px 10px;border-radius:6px;cursor:pointer;" title="Configurar Disponibilidad">⚙️</button>
       <button onclick="removeStaff(${i})" style="background:#fee2e2;color:#dc2626;border:none;padding:8px 12px;border-radius:6px;cursor:pointer;font-weight:bold;">X</button>
     </div>
+    <div id="staffSettings_${i}" style="display:none;margin-top:6px;margin-bottom:12px;padding:12px;background:var(--card);border:1px solid var(--border);border-radius:8px;">
+      <div style="font-size:13px;font-weight:600;margin-bottom:8px;">Días Libres (Sólo para este especialista)</div>
+      <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:12px;">
+        ${['DOM','LUN','MAR','MIÉ','JUE','VIE','SAB'].map((d, j) => `
+          <label style="font-size:12px;display:flex;align-items:center;gap:4px;cursor:pointer;">
+            <input type="checkbox" onchange="toggleStaffDayOff(${i}, ${j}, this.checked)" ${s.daysOff && s.daysOff.includes(j) ? 'checked' : ''}> ${d}
+          </label>
+        `).join('')}
+      </div>
+      <div style="font-size:13px;font-weight:600;margin-bottom:4px;">Fechas Libres (YYYY-MM-DD)</div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:6px;">Separadas por comas (Ej: 2026-09-15, 2026-10-01)</div>
+      <input type="text" value="${(s.disabledDates||[]).join(', ')}" onchange="updateStaffDisabledDates(${i}, this.value)" style="width:100%;padding:8px;border-radius:6px;border:1px solid var(--border);font-family:inherit;font-size:13px;">
+    </div>
   `).join('');
+  
+  window.toggleStaffSettings = function(i) {
+    const el = document.getElementById('staffSettings_'+i);
+    el.style.display = el.style.display === 'none' ? 'block' : 'none';
+  };
+  window.toggleStaffDayOff = function(i, dayIdx, isChecked) {
+    if(!STAFF[i].daysOff) STAFF[i].daysOff = [];
+    if(isChecked) {
+      if(!STAFF[i].daysOff.includes(dayIdx)) STAFF[i].daysOff.push(dayIdx);
+    } else {
+      STAFF[i].daysOff = STAFF[i].daysOff.filter(d => d !== dayIdx);
+    }
+  };
+  window.updateStaffDisabledDates = function(i, val) {
+    STAFF[i].disabledDates = val.split(',').map(s => s.trim()).filter(s => s.length > 0);
+  };
   
   // Actualizar dropdown de filtro en agenda
   const filterSelect = document.getElementById('staffAgendaFilter');
