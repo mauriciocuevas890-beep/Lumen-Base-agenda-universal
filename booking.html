@@ -483,7 +483,7 @@ document.getElementById('s4Submit').onclick=async function(){
     goStep(99);
   }catch(e){
     btn.disabled=false;btn.innerHTML='Confirmar cita';
-    errEl.textContent='Error al enviar. Intenta de nuevo o llama directamente.';errEl.classList.add('show');
+    errEl.textContent='Error al enviar: ' + (e.message || JSON.stringify(e));errEl.classList.add('show');
   }
 };
 renderServices();
