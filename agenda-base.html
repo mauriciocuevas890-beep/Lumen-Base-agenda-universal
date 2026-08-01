@@ -1011,6 +1011,7 @@ function fmt$(n){ const v=Number(n)||0; return "$"+(v%1===0?v.toFixed(0):v.toFix
 function fmt12h(t) {
   if(!t || typeof t !== 'string' || !t.includes(':')) return '';
   var p = t.split(':'), h = parseInt(p[0], 10), m = p[1];
+  if(isNaN(h)) return '';
   var ampm = h >= 12 ? 'PM' : 'AM';
   h = h % 12;
   if(h === 0) h = 12;
@@ -1029,6 +1030,7 @@ function getEndTime(start, svcName) {
   const parts = start.split(":");
   let h = parseInt(parts[0], 10);
   let m = parseInt(parts[1], 10);
+  if(isNaN(h) || isNaN(m)) return "";
   let totalMin = h * 60 + m + dur;
   let newH = Math.floor(totalMin / 60);
   let newM = totalMin % 60;
@@ -1235,9 +1237,12 @@ function renderDayList(){
     var waText = waTemplate.replace('{nombre}', a.clientName).replace('{servicio}', a.service).replace('{fecha}', a.date).replace('{hora}', fmt12h(a.startTime)).replace('{link_gestion}', link_gestion);
     var waLink = "https://wa.me/" + (a.phone ? a.phone.replace(/\D/g, '') : '') + "?text=" + encodeURIComponent(waText);
 
+    let endT2 = a.endTime;
+    if(!endT2 || !endT2.includes(":")) endT2 = getEndTime(a.startTime, a.service);
+
     return `
     <div class="appt">
-      <div class="time">${a.startTime}<div class="end">${a.endTime}</div></div>
+      <div class="time">${fmt12h(a.startTime)}<div class="end">${fmt12h(endT2)}</div></div>
       <div class="avatar">${initials(a.clientName)}</div>
       <div class="info">
         <div class="nm">${escapeHtml(a.clientName)}</div>
