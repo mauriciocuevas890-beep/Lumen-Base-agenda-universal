@@ -1401,14 +1401,32 @@ function openClientModal(c){
 
   const btnDel = document.getElementById("btnDeleteClient");
   if(btnDel){
-    btnDel.onclick = function() {
-      if(confirm('¿Seguro que deseas eliminar a este cliente de la lista? Sus citas existentes no se borrarán de la base de datos, pero el cliente desaparecerá hasta que vuelvas a sincronizar o tenga nuevas citas.')) {
-        delete state.clients[clientKey];
-        saveClients();
-        closeClientModal();
-        renderClientes();
-      }
-    };
+    if (c.appts.length > 0) {
+      btnDel.textContent = "Limpiar Historial de Citas";
+      btnDel.onclick = async function() {
+        if(confirm('¿Seguro que deseas limpiar el historial de citas de este cliente? Todas sus citas se borrarán de la base de datos permanentemente y tu calendario estará sincronizado.')) {
+          const apptsToDelete = c.appts.map(a => a.id);
+          state.appts = state.appts.filter(a => !apptsToDelete.includes(a.id));
+          save();
+          if (sbOk) {
+            await Promise.all(apptsToDelete.map(id => sbClient.from('appointments').delete().eq('id', id)));
+          }
+          closeClientModal();
+          renderClientes();
+          render();
+        }
+      };
+    } else {
+      btnDel.textContent = "Eliminar Cliente";
+      btnDel.onclick = function() {
+        if(confirm('¿Seguro que deseas eliminar a este cliente de la lista? Se perderán sus imágenes y notas.')) {
+          delete state.clients[clientKey];
+          saveClients();
+          closeClientModal();
+          renderClientes();
+        }
+      };
+    }
   }
 
   document.getElementById("clientOverlay").classList.add("open");
