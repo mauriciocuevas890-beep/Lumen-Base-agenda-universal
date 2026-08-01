@@ -1104,8 +1104,8 @@ function renderStats(){
   el.innerHTML = `
     <div class="stat today">
       <div class="label">Hoy · ${(DAYS_LONG[now.getDay()]+", "+now.getDate()+" de "+MONTHS[now.getMonth()].toLowerCase()).toUpperCase()}</div>
-      <div class="big">${active.length} citas</div>
-      <div class="foot"><b>${comp.length} completadas</b> de ${pend.length} pendientes</div>
+      <div class="big">${pend.length} pendientes</div>
+      <div class="foot"><b>${comp.length} completadas</b> de ${active.length} en total</div>
     </div>
     <div class="stat">
       <div class="label">Próxima</div>
