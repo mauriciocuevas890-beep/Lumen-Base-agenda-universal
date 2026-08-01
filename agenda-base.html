@@ -1414,16 +1414,32 @@ async function fetchSolicitudes() {
   try {
     const { data: list, error } = await sbClient
       .from('appointments')
-      .select('*')
-      .eq('status', 'pending');
+      .select('*');
       
     if (error) throw error;
     
-    window.pendingSolicitudes = list || [];
+    // Sincronizar todas las citas al estado local
+    state.appts = (list || []).filter(r => r.status !== 'pending').map(r => ({
+      id: r.id,
+      clientName: r.client_name,
+      phone: r.phone,
+      service: r.service,
+      price: r.price,
+      date: r.date,
+      startTime: r.start_time,
+      endTime: r.end_time || '',
+      notes: r.notes || '',
+      status: r.status
+    }));
+    save();
+    buildClientMap();
+    render();
+    
+    window.pendingSolicitudes = (list || []).filter(r => r.status === 'pending');
     
     const badge = document.getElementById('solBadge');
-    if (list && list.length > 0) { 
-      badge.textContent = list.length; 
+    if (window.pendingSolicitudes.length > 0) { 
+      badge.textContent = window.pendingSolicitudes.length; 
       badge.style.display = 'inline'; 
     } else {
       badge.style.display = 'none';
