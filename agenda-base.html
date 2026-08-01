@@ -1291,7 +1291,7 @@ function renderNext(){
 
 function renderSummary(){
   const t=todayIso();
-  const today=state.appts.filter(a=>a.date===t);
+  const today=apptsOn(t);
   const comp=today.filter(a=>a.status==="completed");
   document.getElementById("sumP").textContent=today.filter(a=>a.status==="scheduled").length;
   document.getElementById("sumC").textContent=comp.length;
