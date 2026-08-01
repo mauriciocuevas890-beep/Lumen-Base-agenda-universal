@@ -479,7 +479,7 @@ document.getElementById('s4Submit').onclick=async function(){
     }
     if (!manageId) recordBooking();
     document.getElementById('bidDisplay').textContent=bid;
-    document.getElementById('s99Title').textContent = manageId ? 'Cita reprogramada!' : 'Cita confirmada!';
+    document.querySelector('.success-title').textContent = manageId ? 'Cita reprogramada!' : 'Cita solicitada!';
     goStep(99);
   }catch(e){
     btn.disabled=false;btn.innerHTML='Confirmar cita';
