@@ -1037,6 +1037,17 @@ function renderDayList(){
       return notes.includes('[Staff: ' + state.staffFilter + ']');
     });
   }
+  
+  // Ocultar citas de especialistas eliminados
+  const currentStaffNames = STAFF.map(s => s.name.trim().toLowerCase());
+  list = list.filter(a => {
+    let n = a.notes || '';
+    const m = n.match(/\[Staff: (.*?)\]/);
+    if(m) {
+      return currentStaffNames.includes(m[1].trim().toLowerCase());
+    }
+    return true; // Mostrar si no tiene staff asignado
+  });
   if(state.search) list=list.filter(a=>a.clientName.toLowerCase().includes(state.search.toLowerCase()));
   const wrap=document.getElementById("dayList");
   if(list.length===0){
