@@ -414,7 +414,7 @@
           <h1 class="hero">Tu agenda, <span class="accent">al día.</span></h1>
         </div>
         <div class="top-actions">
-          <select id="staffAgendaFilter" style="padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg); color: var(--text); font-family: inherit; font-size: 13.5px; margin-right: 10px; cursor: pointer; outline: none; display: none;" onchange="state.staffFilter=this.value; renderDayList();">
+          <select id="staffAgendaFilter" style="padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg); color: var(--text); font-family: inherit; font-size: 13.5px; margin-right: 10px; cursor: pointer; outline: none; display: none;" onchange="state.staffFilter=this.value; render();">
             <option value="all">Todos los especialistas</option>
           </select>
           <button class="icon-btn" id="filterBtn" title="Filtrar citas">
@@ -991,8 +991,20 @@ function fmt12h(t) {
 }
 
 function apptsOn(dateIso){
-  return state.appts.filter(a=>a.date===dateIso)
-    .sort((a,b)=>a.startTime.localeCompare(b.startTime));
+  let list = state.appts.filter(a=>a.date===dateIso);
+  const currentStaffNames = STAFF.map(s => s.name.trim().toLowerCase());
+  list = list.filter(a => {
+    let n = a.notes || '';
+    const m = n.match(/\[Staff: (.*?)\]/);
+    if(m) {
+      if(!currentStaffNames.includes(m[1].trim().toLowerCase())) return false;
+      if(state.staffFilter !== "all" && m[1].trim() !== state.staffFilter) return false;
+    } else if (state.staffFilter !== "all") {
+      return false;
+    }
+    return true;
+  });
+  return list.sort((a,b)=>a.startTime.localeCompare(b.startTime));
 }
 
 // Build client map from all appointments
@@ -1052,7 +1064,7 @@ function renderTopDate(){
 
 function renderStats(){
   const t=todayIso();
-  const today=state.appts.filter(a=>a.date===t);
+  const today=apptsOn(t);
   const active=today.filter(a=>a.status!=="cancelled");
   const pend=today.filter(a=>a.status==="scheduled");
   const comp=today.filter(a=>a.status==="completed");
@@ -1156,23 +1168,6 @@ function renderDayList(){
   document.getElementById("dayLabel").textContent = DAYS_LONG[d.getDay()]+", "+d.getDate()+" de "+MONTHS[d.getMonth()].toLowerCase();
   let list=apptsOn(state.selected);
   if(state.filter!=="all") list=list.filter(a=>a.status===state.filter);
-  if(state.staffFilter!=="all") {
-    list=list.filter(a => {
-      let notes = a.notes || '';
-      return notes.includes('[Staff: ' + state.staffFilter + ']');
-    });
-  }
-  
-  // Ocultar citas de especialistas eliminados
-  const currentStaffNames = STAFF.map(s => s.name.trim().toLowerCase());
-  list = list.filter(a => {
-    let n = a.notes || '';
-    const m = n.match(/\[Staff: (.*?)\]/);
-    if(m) {
-      return currentStaffNames.includes(m[1].trim().toLowerCase());
-    }
-    return true; // Mostrar si no tiene staff asignado
-  });
   if(state.search) list=list.filter(a=>a.clientName.toLowerCase().includes(state.search.toLowerCase()));
   const wrap=document.getElementById("dayList");
   if(list.length===0){
