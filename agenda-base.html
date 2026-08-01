@@ -579,9 +579,12 @@
         <h3 style="margin-bottom:15px;font-size:16px;margin-top:25px;">Días Festivos / Vacaciones</h3>
         <p style="font-size:12px;color:var(--muted);margin-bottom:10px;">Escribe las fechas exactas (YYYY-MM-DD) separadas por coma en las que no trabajarás.</p>
         <div class="field" style="margin-bottom:15px;">
-          <div style="display:flex;gap:8px;margin-bottom:8px;">
-            <input type="date" id="ajGlobalDateInput" style="flex:1;padding:10px;border-radius:6px;border:1px solid var(--border);font-family:inherit;font-size:14px;">
-            <button type="button" onclick="addGlobalDisabledDate()" style="background:var(--blue);color:#fff;border:none;padding:10px 16px;border-radius:6px;cursor:pointer;font-weight:bold;">Agregar</button>
+          <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px;align-items:center;">
+            <span style="font-size:13px;font-weight:600;">Del:</span>
+            <input type="date" id="ajGlobalDateInput" style="flex:1;min-width:120px;padding:8px;border-radius:6px;border:1px solid var(--border);font-family:inherit;font-size:13px;">
+            <span style="font-size:13px;font-weight:600;">Al (opcional):</span>
+            <input type="date" id="ajGlobalDateInputEnd" style="flex:1;min-width:120px;padding:8px;border-radius:6px;border:1px solid var(--border);font-family:inherit;font-size:13px;">
+            <button type="button" onclick="addGlobalDisabledDate()" style="background:var(--blue);color:#fff;border:none;padding:8px 16px;border-radius:6px;cursor:pointer;font-weight:bold;font-size:13px;">Agregar</button>
           </div>
           <div id="ajGlobalDisabledDatesList" style="display:flex;gap:6px;flex-wrap:wrap;"></div>
         </div>
@@ -777,8 +780,11 @@ function renderAjStaff() {
         `).join('')}
       </div>
       <div style="font-size:13px;font-weight:600;margin-bottom:4px;">Fechas Específicas Libres</div>
-      <div style="display:flex;gap:8px;margin-bottom:8px;">
-        <input type="date" id="staffDateInput_${i}" style="flex:1;padding:8px;border-radius:6px;border:1px solid var(--border);font-family:inherit;font-size:13px;">
+      <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px;align-items:center;">
+        <span style="font-size:12px;font-weight:600;">Del:</span>
+        <input type="date" id="staffDateInput_${i}" style="flex:1;min-width:110px;padding:8px;border-radius:6px;border:1px solid var(--border);font-family:inherit;font-size:13px;">
+        <span style="font-size:12px;font-weight:600;">Al (opcional):</span>
+        <input type="date" id="staffDateInputEnd_${i}" style="flex:1;min-width:110px;padding:8px;border-radius:6px;border:1px solid var(--border);font-family:inherit;font-size:13px;">
         <button onclick="addStaffDisabledDate(${i})" style="background:var(--blue);color:#fff;border:none;padding:8px 12px;border-radius:6px;cursor:pointer;font-size:13px;font-weight:600;">Agregar</button>
       </div>
       <div style="display:flex;gap:6px;flex-wrap:wrap;">
@@ -804,12 +810,36 @@ function renderAjStaff() {
       STAFF[i].daysOff = STAFF[i].daysOff.filter(d => d !== dayIdx);
     }
   };
+  function getDatesInRange(startStr, endStr) {
+    if(!endStr) return [startStr];
+    const dates = [];
+    let curr = new Date(startStr + 'T12:00:00');
+    const end = new Date(endStr + 'T12:00:00');
+    if(curr > end) return [];
+    while(curr <= end) {
+      const y = curr.getFullYear();
+      const m = String(curr.getMonth()+1).padStart(2, '0');
+      const d = String(curr.getDate()).padStart(2, '0');
+      dates.push(y+'-'+m+'-'+d);
+      curr.setDate(curr.getDate() + 1);
+    }
+    return dates;
+  }
+  
   window.addStaffDisabledDate = function(i) {
-    const input = document.getElementById('staffDateInput_'+i);
-    if(input && input.value) {
+    const inputStart = document.getElementById('staffDateInput_'+i);
+    const inputEnd = document.getElementById('staffDateInputEnd_'+i);
+    if(inputStart && inputStart.value) {
       if(!STAFF[i].disabledDates) STAFF[i].disabledDates = [];
-      if(!STAFF[i].disabledDates.includes(input.value)) {
-        STAFF[i].disabledDates.push(input.value);
+      const dates = getDatesInRange(inputStart.value, inputEnd ? inputEnd.value : null);
+      let added = false;
+      dates.forEach(d => {
+        if(!STAFF[i].disabledDates.includes(d)) {
+          STAFF[i].disabledDates.push(d);
+          added = true;
+        }
+      });
+      if(added) {
         STAFF[i].disabledDates.sort();
         renderAjStaff();
         document.getElementById('staffSettings_'+i).style.display = 'block';
@@ -836,14 +866,23 @@ function renderAjStaff() {
     `).join('');
   };
   window.addGlobalDisabledDate = function() {
-    const input = document.getElementById('ajGlobalDateInput');
-    if(input && input.value) {
-      if(!window.GLOBAL_DISABLED_DATES.includes(input.value)) {
-        window.GLOBAL_DISABLED_DATES.push(input.value);
+    const inputStart = document.getElementById('ajGlobalDateInput');
+    const inputEnd = document.getElementById('ajGlobalDateInputEnd');
+    if(inputStart && inputStart.value) {
+      const dates = getDatesInRange(inputStart.value, inputEnd ? inputEnd.value : null);
+      let added = false;
+      dates.forEach(d => {
+        if(!window.GLOBAL_DISABLED_DATES.includes(d)) {
+          window.GLOBAL_DISABLED_DATES.push(d);
+          added = true;
+        }
+      });
+      if(added) {
         window.GLOBAL_DISABLED_DATES.sort();
         window.renderGlobalDisabledDates();
       }
-      input.value = '';
+      inputStart.value = '';
+      if(inputEnd) inputEnd.value = '';
     }
   };
   window.removeGlobalDisabledDate = function(date) {
