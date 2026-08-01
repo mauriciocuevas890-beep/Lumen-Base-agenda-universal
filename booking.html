@@ -428,7 +428,7 @@ document.getElementById('s3Back').onclick=function(){goStep(2);};
 function renderSummary(){
   var end=selSlot?addMins(selSlot,selSvc?selSvc.duration:60):'';
   let staffRow = selStaff ? '<div class="summary-row"><span class="k">Especialista</span><span class="v">'+selStaff.name+'</span></div>' : '';
-  document.getElementById('bookSummary').innerHTML='<div class="summary-row"><span class="k">Servicio</span><span class="v">'+(selSvc?selSvc.name:'')+'</span></div>'+staffRow+'<div class="summary-row"><span class="k">Precio</span><span class="v">'+(selSvc?'$'+selSvc.price:'')+'</span></div><div class="summary-row"><span class="k">Fecha</span><span class="v">'+(selDate?fmtDate(selDate):'')+'</span></div><div class="summary-row"><span class="k">Horario</span><span class="v">'+(selSlot?fmt12h(selSlot):'')+' - '+fmt12h(end)+'</span></div>';
+  document.getElementById('bookSummary').innerHTML='<div class="summary-row"><span class="k">Servicio</span><span class="v">'+(selSvc?selSvc.name:'')+'</span></div>'+staffRow+'<div class="summary-row"><span class="k">Precio</span><span class="v">'+(selSvc?'$'+selSvc.price:'')+'</span></div><div class="summary-row"><span class="k">Fecha</span><span class="v">'+(selDate?fmtDate(selDate):'')+'</span></div><div class="summary-row"><span class="k">Horario</span><span class="v">'+(selSlot?fmt12h(selSlot):'')+'</span></div>';
 }
 document.getElementById('s4Back').onclick=function(){goStep(3);};
 document.getElementById('s4Submit').onclick=async function(){
