@@ -1084,12 +1084,12 @@ let state = {
     endTime: a.endTime ? String(a.endTime).padStart(5, '0') : ''
   })),
   view: "week",
-  currentView: "agenda",
+  currentView: localStorage.getItem("lumen.agenda.currentView") || "agenda",
   periodRef: new Date(),
   selected: iso(new Date()),
   search: "",
   filter: "all",
-  staffFilter: "all",
+  staffFilter: localStorage.getItem("lumen.agenda.staffFilter") || "all",
   clientSearch: "",
   clients: loadClients()
 };
