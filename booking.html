@@ -582,6 +582,24 @@ document.getElementById('s4Submit').onclick=async function(){
         r = await sbClient.from('appointments').insert(data); 
       }
       if(r.error) throw r.error; 
+      
+      // Enviar Telegram si es nueva reserva y están configurados los credenciales
+      if (!manageId && typeof AVAIL !== 'undefined' && AVAIL.telegramToken && AVAIL.telegramChatId) {
+        try {
+          const staffName = data.notes ? (data.notes.match(/\[Staff: (.*?)\]/)?.[1] || 'Sin asignar') : 'Sin asignar';
+          const link_agenda = window.location.origin + window.location.pathname.replace(/\/[^/]*$/, '/agenda-base.html');
+          const msg = `📅 ¡NUEVA SOLICITUD DE CITA!\n\n👤 Cliente: ${data.client_name}\n📞 Teléfono: ${data.phone}\n✂️ Servicio: ${data.service}\n🧑‍💼 Especialista: ${staffName}\n⏰ Fecha: ${data.date} a las ${fmt12h(data.start_time)}\n\n👉 Aprobar o rechazar aquí: ${link_agenda}`;
+          const tgUrl = `https://api.telegram.org/bot${AVAIL.telegramToken.trim()}/sendMessage`;
+          fetch(tgUrl, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+              chat_id: AVAIL.telegramChatId.trim(),
+              text: msg
+            })
+          }).catch(err => console.error("Error Telegram:", err));
+        } catch(tgErr) { console.error("Error formando mensaje TG:", tgErr); }
+      } 
     }
     if (!manageId) recordBooking();
     document.getElementById('bidDisplay').textContent=bid;

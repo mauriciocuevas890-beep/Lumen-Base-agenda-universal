@@ -330,6 +330,8 @@
   [data-theme="light"] .icon-moon{display:none}
 
   @media(max-width:1080px){
+    .agenda-layout{grid-template-columns:1fr !important}
+    .avail-panel{position:static !important; min-height:auto !important; max-height:none !important;}
     .grid{grid-template-columns:1fr}
     .stats{grid-template-columns:repeat(2,1fr)}
   }
@@ -384,6 +386,10 @@
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
       <span>Agenda</span>
     </button>
+    <button class="nav-item" id="disponibilidadBtn">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      <span>Disponibilidad</span>
+    </button>
     <button class="nav-item" id="solicitudesBtn">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="m9 14 2 2 4-4"/></svg>
       <span>Solicitudes</span>
@@ -392,6 +398,10 @@
     <button class="nav-item" id="clientesBtn">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
       <span>Clientes</span>
+    </button>
+    <button class="nav-item" id="finanzasBtn">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+      <span>Finanzas</span>
     </button>
     <button class="nav-item" id="ajustesBtn">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
@@ -414,9 +424,12 @@
           <h1 class="hero">Tu agenda, <span class="accent">al día.</span></h1>
         </div>
         <div class="top-actions">
-          <select id="staffAgendaFilter" style="padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg); color: var(--text); font-family: inherit; font-size: 13.5px; margin-right: 10px; cursor: pointer; outline: none; display: none;" onchange="state.staffFilter=this.value; render();">
-            <option value="all">Todos los especialistas</option>
-          </select>
+          <div id="staffAgendaWrapper" style="display:none; align-items:center; gap:8px; margin-right: 10px;">
+            <img id="staffAgendaImg" src="" style="width:42px; height:42px; border-radius:50%; object-fit:cover; display:none; border:1px solid var(--border); background:var(--bg);">
+            <select id="staffAgendaFilter" style="padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg); color: var(--text); font-family: inherit; font-size: 13.5px; cursor: pointer; outline: none;" onchange="state.staffFilter=this.value; localStorage.setItem('lumen.agenda.staffFilter', this.value); render();">
+              <option value="all">Todos los especialistas</option>
+            </select>
+          </div>
           <button class="icon-btn" id="filterBtn" title="Filtrar citas">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
           </button>
@@ -496,6 +509,40 @@
       </div>
     </div>
 
+    <!-- ===== DISPONIBILIDAD VIEW ===== -->
+    <div class="view" id="viewDisponibilidad">
+      <div class="topbar">
+        <div>
+          <div class="eyebrow">HORARIOS</div>
+          <h1 class="hero">Tu <span class="accent">disponibilidad.</span></h1>
+        </div>
+        <div class="top-actions">
+          <div id="staffAvailWrapper" style="display:none; align-items:center; gap:8px; margin-right: 10px;">
+            <img id="staffAvailImg" src="" style="width:42px; height:42px; border-radius:50%; object-fit:cover; display:none; border:1px solid var(--border); background:var(--bg);">
+            <select id="staffAvailFilter" style="padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg); color: var(--text); font-family: inherit; font-size: 13.5px; cursor: pointer; outline: none;" onchange="state.staffFilter=this.value; localStorage.setItem('lumen.agenda.staffFilter', this.value); render();">
+              <option value="all">Todos los especialistas</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <div class="avail-panel card" style="max-width:800px; margin-top:20px; display:flex; flex-direction:column; overflow:hidden;">
+        <div class="card-head" style="margin-bottom:12px;">
+          <div>
+            <div class="card-title">Disponibilidad de citas</div>
+            <div class="card-sub" id="availSubTitle" style="margin-top:4px; margin-bottom:0;">Selecciona un horario para agendar.</div>
+          </div>
+        </div>
+        <div class="toggle" style="margin-bottom:14px; align-self:flex-start; display:flex; width:300px; max-width:100%;">
+          <button id="avDiaBtn" class="active" onclick="window.setAvailTab('dia')" style="flex:1; padding:6px 12px; font-size:12px;">Día</button>
+          <button id="avSemBtn" onclick="window.setAvailTab('semana')" style="flex:1; padding:6px 12px; font-size:12px;">Semana</button>
+          <button id="avMesBtn" onclick="window.setAvailTab('mes')" style="flex:1; padding:6px 12px; font-size:12px;">Mes</button>
+        </div>
+        <div id="availBody" style="font-size:13.5px; padding-top:10px;">
+           <div style="text-align:center; padding:20px; color:var(--muted);">Cargando disponibilidad...</div>
+        </div>
+      </div>
+    </div>
+
     <!-- ===== CLIENTES VIEW ===== -->
     <div class="view" id="viewClientes">
       <div class="clientes-header">
@@ -520,6 +567,33 @@
         </div>
       </div>
       <div id="solicitudesList" style="margin-top:8px"></div>
+    </div>
+
+    <!-- ===== FINANZAS VIEW ===== -->
+    <div class="view" id="viewFinanzas">
+      <div class="topbar">
+        <div>
+          <div class="eyebrow">Rendimiento</div>
+          <h1 class="hero">Tus <span class="accent">finanzas.</span></h1>
+        </div>
+      </div>
+      <div class="stats" id="finanzasKpis" style="margin-top:20px;">
+        <!-- KPIs renders here -->
+      </div>
+      
+      <div style="display:grid; grid-template-columns:1fr; gap:20px; margin-top:20px;">
+        <!-- Desglose por especialista -->
+        <div class="card" id="finanzasStaff" style="display:none;">
+          <h3 style="font-size:16px; margin-bottom:15px;">Ingresos por Especialista</h3>
+          <div id="finanzasStaffList" style="display:flex; flex-direction:column; gap:12px;"></div>
+        </div>
+        
+        <!-- Historial de Transacciones -->
+        <div class="card">
+          <h3 style="font-size:16px; margin-bottom:15px;">Historial de Transacciones</h3>
+          <div id="finanzasTxList" style="display:flex; flex-direction:column; gap:10px;"></div>
+        </div>
+      </div>
     </div>
 
     <!-- ===== AJUSTES VIEW ===== -->
@@ -623,10 +697,28 @@
         </div>
 
         <div style="margin-top:30px;">
-          <h3 style="margin-bottom:15px;font-size:16px;">Mensaje de WhatsApp</h3>
-          <p style="font-size:12px;color:var(--muted);margin-bottom:10px;">Personaliza el mensaje que se enviará al cliente al confirmar su cita. Usa las variables: <strong>{nombre}</strong>, <strong>{servicio}</strong>, <strong>{fecha}</strong>, <strong>{hora}</strong>, <strong>{link_gestion}</strong></p>
+          <h3 style="margin-bottom:15px;font-size:16px;">Mensajes de WhatsApp</h3>
+          <p style="font-size:12px;color:var(--muted);margin-bottom:10px;">Personaliza el mensaje que se enviará al cliente. Usa las variables: <strong>{nombre}</strong>, <strong>{servicio}</strong>, <strong>{fecha}</strong>, <strong>{hora}</strong>, <strong>{link_gestion}</strong></p>
           <div class="field" style="margin-bottom:15px;">
-            <textarea id="ajWhatsappMsg" rows="3" placeholder="Hola {nombre}, tu cita de {servicio} para el {fecha} a las {hora} ha sido confirmada. ¡Te esperamos!" style="width:100%;padding:10px;border-radius:8px;border:1px solid var(--border);font-family:inherit;font-size:13px;resize:vertical;"></textarea>
+            <label style="font-weight:600;font-size:13px;display:block;margin-bottom:5px;">Para Citas del Día (Agenda)</label>
+            <textarea id="ajWhatsappMsg" rows="3" placeholder="este mensaje es para confirmar la asistencia a la cita de hoy {fecha}" style="width:100%;padding:10px;border-radius:8px;border:1px solid var(--border);font-family:inherit;font-size:13px;resize:vertical;"></textarea>
+          </div>
+          <div class="field" style="margin-bottom:15px;">
+            <label style="font-weight:600;font-size:13px;display:block;margin-bottom:5px;">Para Solicitudes (Disponibilidad)</label>
+            <textarea id="ajWhatsappMsgSol" rows="3" placeholder="Hola {nombre}, hemos recibido tu solicitud para el {fecha} a las {hora}. En breve te confirmaremos." style="width:100%;padding:10px;border-radius:8px;border:1px solid var(--border);font-family:inherit;font-size:13px;resize:vertical;"></textarea>
+          </div>
+        </div>
+        
+        <div style="margin-top:30px;">
+          <h3 style="margin-bottom:15px;font-size:16px;">Notificaciones de Telegram</h3>
+          <p style="font-size:12px;color:var(--muted);margin-bottom:10px;">Recibe notificaciones instantáneas de nuevas citas directamente a tu Telegram. Crea un bot con BotFather y pega los datos aquí.</p>
+          <div class="field" style="margin-bottom:15px;">
+            <label style="font-weight:600;font-size:13px;display:block;margin-bottom:5px;">Token del Bot</label>
+            <input type="text" id="ajTelegramToken" placeholder="Ej. 123456:ABC-DEF1234ghIkl-zyx57W2v1u123ew11" style="width:100%;padding:10px;border-radius:8px;border:1px solid var(--border);font-family:inherit;font-size:13px;">
+          </div>
+          <div class="field" style="margin-bottom:15px;">
+            <label style="font-weight:600;font-size:13px;display:block;margin-bottom:5px;">Chat ID</label>
+            <input type="text" id="ajTelegramChatId" placeholder="Ej. 123456789 o -100987654321" style="width:100%;padding:10px;border-radius:8px;border:1px solid var(--border);font-family:inherit;font-size:13px;">
           </div>
         </div>
         
@@ -891,22 +983,29 @@ function renderAjStaff() {
     window.renderGlobalDisabledDates();
   };
   
-  // Actualizar dropdown de filtro en agenda
-  const filterSelect = document.getElementById('staffAgendaFilter');
-  if (filterSelect) {
-    if (STAFF.length > 0) {
-      filterSelect.style.display = 'block';
-      let html = '<option value="all">Todos los especialistas</option>';
-      STAFF.forEach(s => {
-        if(s.name.trim()) html += `<option value="${s.name.trim()}">${s.name.trim()}</option>`;
-      });
-      filterSelect.innerHTML = html;
-      filterSelect.value = state.staffFilter;
-    } else {
-      filterSelect.style.display = 'none';
-      state.staffFilter = 'all';
+  // Actualizar dropdowns de filtro
+  const wrappers = [document.getElementById('staffAgendaWrapper'), document.getElementById('staffAvailWrapper')];
+  wrappers.forEach(w => { if(w) w.style.display = STAFF.length > 0 ? 'flex' : 'none'; });
+
+  const filterSelects = [document.getElementById('staffAgendaFilter'), document.getElementById('staffAvailFilter')];
+  filterSelects.forEach(select => {
+    if (select) {
+      if (STAFF.length > 0) {
+        select.style.display = 'block';
+        let html = '<option value="all">Todos los especialistas</option>';
+        STAFF.forEach(s => {
+          if(s.name.trim()) html += `<option value="${s.name.trim()}">${s.name.trim()}</option>`;
+        });
+        select.innerHTML = html;
+        select.value = state.staffFilter;
+      } else {
+        select.style.display = 'none';
+        state.staffFilter = 'all';
+      }
     }
-  }
+  });
+  
+  syncFilterMenu();
 }
 window.updateStaff = function(i, field, val) { 
   if (field === 'name') {
@@ -980,7 +1079,10 @@ document.getElementById('ajAddServiceBtn').addEventListener('click', () => {
 
 
 let state = {
-  appts: load(),
+  appts: load().map(a => Object.assign(a, {
+    startTime: a.startTime ? String(a.startTime).padStart(5, '0') : '',
+    endTime: a.endTime ? String(a.endTime).padStart(5, '0') : ''
+  })),
   view: "week",
   currentView: "agenda",
   periodRef: new Date(),
@@ -1092,6 +1194,191 @@ function handleClientImageUpload(event, clientKey) {
   reader.readAsDataURL(file);
 }
 
+// ---------- availability ----------
+let currentAvailTab = 'dia'; 
+window.setAvailTab = function(tab) {
+  currentAvailTab = tab;
+  document.getElementById('avDiaBtn').classList.toggle('active', tab === 'dia');
+  document.getElementById('avSemBtn').classList.toggle('active', tab === 'semana');
+  document.getElementById('avMesBtn').classList.toggle('active', tab === 'mes');
+  renderAvailability();
+};
+
+function getStaffAvailConfig() {
+  let sStart = window.AVAIL ? window.AVAIL.startHour : 8;
+  let sEnd = window.AVAIL ? window.AVAIL.endHour : 18;
+  let sSlot = window.AVAIL ? window.AVAIL.slotMinutes : 30;
+  let sDaysOff = window.AVAIL ? window.AVAIL.daysOff : [];
+  let sBreakStart = window.AVAIL ? window.AVAIL.breakStart : null;
+  let sBreakEnd = window.AVAIL ? window.AVAIL.breakEnd : null;
+  let globalDisabled = window.AVAIL ? window.AVAIL.disabledDates : [];
+
+  let filter = state.staffFilter;
+  let staffName = filter !== 'all' ? filter : null;
+  let staffConfig = null;
+  if(staffName && STAFF.length > 0) {
+    staffConfig = STAFF.find(s => s.name.trim() === staffName);
+  }
+  
+  if(staffConfig) {
+    if(staffConfig.daysOff) sDaysOff = [...new Set([...(sDaysOff || []), ...staffConfig.daysOff])];
+    if(staffConfig.disabledDates) globalDisabled = [...new Set([...(globalDisabled || []), ...staffConfig.disabledDates])];
+  }
+  return { sStart, sEnd, sSlot, sDaysOff, sBreakStart, sBreakEnd, globalDisabled };
+}
+
+function calcDayAvail(dateStr) {
+  if(!window.AVAIL) return [];
+  const { sStart, sEnd, sSlot, sDaysOff, sBreakStart, sBreakEnd, globalDisabled } = getStaffAvailConfig();
+  
+  const d = parseIso(dateStr);
+  const dayOfW = d.getDay();
+  if((sDaysOff || []).includes(dayOfW)) return [];
+  if((globalDisabled || []).includes(dateStr)) return [];
+  if (dateStr < todayIso()) return [];
+  
+  let slots = [];
+  let curr = sStart * 60;
+  const end = sEnd * 60;
+  
+  const breakStartMin = sBreakStart ? toMin(sBreakStart) : -1;
+  const breakEndMin = sBreakEnd ? toMin(sBreakEnd) : -1;
+  
+  const now = new Date();
+  const isToday = dateStr === iso(now);
+  const currentMin = now.getHours() * 60 + now.getMinutes();
+
+  let dayAppts = state.appts.filter(a => a.date === dateStr && a.status !== 'cancelled');
+  if(state.staffFilter !== 'all') {
+    dayAppts = dayAppts.filter(a => {
+      let m = (a.notes || '').match(/\[Staff: (.*?)\]/);
+      return m && m[1].trim() === state.staffFilter;
+    });
+  }
+
+  while(curr + sSlot <= end) {
+    if (isToday && curr <= currentMin) { curr += sSlot; continue; }
+    if (breakStartMin >= 0 && breakEndMin >= 0) {
+      if ((curr >= breakStartMin && curr < breakEndMin) || (curr + sSlot > breakStartMin && curr + sSlot <= breakEndMin)) {
+        curr += sSlot; continue;
+      }
+    }
+    
+    // Check conflicts
+    let conflict = false;
+    for(let a of dayAppts) {
+      const aStart = toMin(a.startTime);
+      let endStr = a.endTime;
+      if(!endStr || !endStr.includes(":")) endStr = getEndTime(a.startTime, a.service);
+      const aEnd = toMin(endStr);
+      
+      if (curr < aEnd && (curr + sSlot) > aStart) {
+        conflict = true; break;
+      }
+    }
+    
+    if(!conflict) {
+      let hh = Math.floor(curr / 60); let mm = curr % 60;
+      slots.push(String(hh).padStart(2,'0') + ":" + String(mm).padStart(2,'0'));
+    }
+    curr += sSlot;
+  }
+  return slots;
+}
+
+function renderAvailability() {
+  const availBody = document.getElementById('availBody');
+  if(!availBody) return;
+  if(!window.AVAIL) {
+    availBody.innerHTML = '<div style="text-align:center; padding:20px; color:var(--muted);">Configura el horario en Ajustes.</div>';
+    return;
+  }
+  
+  let html = '';
+  
+  if (currentAvailTab === 'dia') {
+    const dStr = state.selected;
+    const slots = calcDayAvail(dStr);
+    const dObj = parseIso(dStr);
+    const dateLabel = (DAYS_LONG[dObj.getDay()] + ", " + dObj.getDate() + " " + MONTHS[dObj.getMonth()].substr(0,3)).toUpperCase();
+    
+    html += `<div style="font-weight:600; margin-bottom:12px; color:var(--ink);">${dateLabel}</div>`;
+    if(slots.length === 0) {
+      html += `<div style="color:var(--muted);">Sin horas libres o día de descanso.</div>`;
+    } else {
+      html += `<div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">`;
+      slots.forEach(s => {
+        html += `<div style="background:var(--bg); border:1px solid var(--border); border-radius:8px; padding:10px; text-align:center; font-family:'DM Mono',monospace; color:var(--ink); font-weight:600; cursor:pointer;" onclick="openModalForDate('${dStr}', '${s}')">${fmt12h(s)}</div>`;
+      });
+      html += `</div>`;
+    }
+  } else if (currentAvailTab === 'semana') {
+    const start = mondayOf(parseIso(state.selected));
+    for(let i=0; i<7; i++) {
+      const d = new Date(start); d.setDate(start.getDate()+i);
+      const dStr = iso(d);
+      const slots = calcDayAvail(dStr);
+      html += `<div style="margin-bottom:15px; border-bottom:1px solid var(--border); padding-bottom:12px;">`;
+      html += `<div style="font-weight:600; margin-bottom:8px; cursor:pointer;" onclick="state.selected='${dStr}'; window.setAvailTab('dia'); render();">${DAYS_LONG[d.getDay()].substring(0,3).toUpperCase()} ${d.getDate()}</div>`;
+      if(slots.length === 0) {
+        html += `<div style="color:var(--muted); font-size:12px;">Sin horarios.</div>`;
+      } else {
+        html += `<div style="display:flex; flex-wrap:wrap; gap:6px;">`;
+        slots.slice(0, 4).forEach(s => { 
+          html += `<div style="background:var(--bg); border:1px solid var(--border); border-radius:4px; padding:4px 8px; font-size:12px; font-family:'DM Mono',monospace; cursor:pointer;" onclick="openModalForDate('${dStr}', '${s}')">${fmt12h(s)}</div>`;
+        });
+        if(slots.length > 4) html += `<div style="color:var(--muted); font-size:12px; padding:4px; cursor:pointer;" onclick="state.selected='${dStr}'; window.setAvailTab('dia'); render();">+${slots.length - 4}</div>`;
+        html += `</div>`;
+      }
+      html += `</div>`;
+    }
+  } else if (currentAvailTab === 'mes') {
+    const d = parseIso(state.selected);
+    const first = new Date(d.getFullYear(), d.getMonth(), 1);
+    const last = new Date(d.getFullYear(), d.getMonth() + 1, 0);
+    
+    html += `<div style="display:grid; grid-template-columns:repeat(7, 1fr); gap:4px; text-align:center;">`;
+    DOW.forEach(dName => {
+      html += `<div style="font-size:10px; color:var(--muted); font-weight:bold;">${dName.charAt(0)}</div>`;
+    });
+    
+    const startOffset = (first.getDay() + 6) % 7;
+    for(let i=0; i<startOffset; i++) html += `<div></div>`;
+    
+    for(let i=1; i<=last.getDate(); i++) {
+      const currD = new Date(d.getFullYear(), d.getMonth(), i);
+      const dStr = iso(currD);
+      const slots = calcDayAvail(dStr);
+      const isSel = dStr === state.selected;
+      
+      let bg = slots.length > 0 ? 'var(--bg)' : 'transparent';
+      let border = slots.length > 0 ? 'var(--border)' : 'transparent';
+      let color = slots.length > 0 ? 'var(--ink)' : 'var(--muted)';
+      if (isSel) { bg = 'var(--green)'; border = 'var(--green)'; color = '#fff'; }
+      
+      html += `<div style="background:${bg}; border:1px solid ${border}; border-radius:4px; padding:6px 0; font-size:12px; color:${color}; cursor:pointer;" onclick="state.selected='${dStr}'; window.setAvailTab('dia'); render();">${i}</div>`;
+    }
+    html += `</div>`;
+  }
+  
+  availBody.innerHTML = html;
+}
+
+window.openModalForDate = function(dateStr, timeStr) {
+  state.selected = dateStr;
+  render();
+  document.getElementById("newBtn").click();
+  document.getElementById("fDate").value = dateStr;
+  document.getElementById("fStart").value = timeStr;
+  if(window.AVAIL && window.AVAIL.slotMinutes) {
+    let dur = window.AVAIL.slotMinutes;
+    let curr = toMin(timeStr);
+    let end = curr + dur;
+    let hh = Math.floor(end / 60); let mm = end % 60;
+    document.getElementById("fEnd").value = String(hh).padStart(2,'0') + ":" + String(mm).padStart(2,'0');
+  }
+};
+
 // ---------- render ----------
 function render(){
   renderTopDate();
@@ -1101,6 +1388,8 @@ function render(){
   renderNext();
   renderSummary();
   syncFilterMenu();
+  renderAvailability();
+  if (typeof renderFinanzas === 'function') renderFinanzas();
 }
 
 function renderTopDate(){
@@ -1232,7 +1521,7 @@ function renderDayList(){
     const m = n.match(/\[Staff: (.*?)\]/);
     if(m) staffName = m[1];
     
-    var waTemplate = (document.getElementById('ajWhatsappMsg') && document.getElementById('ajWhatsappMsg').value) || 'Hola {nombre}, tu cita de {servicio} para el {fecha} a las {hora} ha sido confirmada. ¡Te esperamos!';
+    var waTemplate = (document.getElementById('ajWhatsappMsg') && document.getElementById('ajWhatsappMsg').value) || 'este mensaje es para confirmar la asistencia a la cita de hoy {fecha}';
     var link_gestion = window.location.origin + window.location.pathname.replace(/\/[^/]*$/, '/booking.html') + '?manage=' + a.id;
     var waText = waTemplate.replace('{nombre}', a.clientName).replace('{servicio}', a.service).replace('{fecha}', a.date).replace('{hora}', fmt12h(a.startTime)).replace('{link_gestion}', link_gestion);
     var waLink = "https://wa.me/" + (a.phone ? a.phone.replace(/\D/g, '') : '') + "?text=" + encodeURIComponent(waText);
@@ -1343,6 +1632,99 @@ function renderSummary(){
 }
 
 // ---------- Clientes view ----------
+window.renderFinanzas = function() {
+  if (state.currentView !== 'finanzas') return;
+  
+  const tx = state.appts.filter(a => a.status === 'completed' || a.status === 'paid');
+  // Ordenar de más reciente a más antigua
+  tx.sort((a, b) => {
+    const tA = new Date(a.date + 'T' + (a.startTime||'00:00')).getTime();
+    const tB = new Date(b.date + 'T' + (b.startTime||'00:00')).getTime();
+    return tB - tA;
+  });
+
+  let totalRevenue = 0;
+  let currentMonthRevenue = 0;
+  const now = new Date();
+  const currY = now.getFullYear();
+  const currM = now.getMonth();
+  
+  const staffRevenue = {};
+
+  tx.forEach(a => {
+    const price = parseFloat(a.price) || 0;
+    totalRevenue += price;
+    
+    const d = parseIso(a.date);
+    if (d.getFullYear() === currY && d.getMonth() === currM) {
+      currentMonthRevenue += price;
+    }
+    
+    let m = (a.notes || '').match(/\[Staff: (.*?)\]/);
+    let sName = m && m[1] ? m[1].trim() : 'Sin asignar';
+    if(!staffRevenue[sName]) staffRevenue[sName] = 0;
+    staffRevenue[sName] += price;
+  });
+
+  const kpisHtml = `
+    <div class="stat revenue">
+      <div class="label">Ingresos Totales</div>
+      <div class="big" style="color:var(--green);">$${totalRevenue.toFixed(2)}</div>
+    </div>
+    <div class="stat pending">
+      <div class="label">Mes Actual</div>
+      <div class="big">$${currentMonthRevenue.toFixed(2)}</div>
+    </div>
+    <div class="stat done">
+      <div class="label">Citas Cobradas</div>
+      <div class="big">${tx.length}</div>
+    </div>
+  `;
+  const kpisContainer = document.getElementById('finanzasKpis');
+  if(kpisContainer) kpisContainer.innerHTML = kpisHtml;
+
+  const staffContainer = document.getElementById('finanzasStaff');
+  const staffList = document.getElementById('finanzasStaffList');
+  if(staffContainer && staffList) {
+    const sKeys = Object.keys(staffRevenue).sort((a, b) => staffRevenue[b] - staffRevenue[a]);
+    if(sKeys.length > 0) {
+      staffContainer.style.display = 'block';
+      staffList.innerHTML = sKeys.map(k => `
+        <div style="display:flex; justify-content:space-between; align-items:center; background:var(--bg); padding:10px 15px; border-radius:8px; border:1px solid var(--border);">
+          <div style="font-weight:600;">${escapeHtml(k)}</div>
+          <div style="color:var(--green); font-weight:700;">$${staffRevenue[k].toFixed(2)}</div>
+        </div>
+      `).join('');
+    } else {
+      staffContainer.style.display = 'none';
+    }
+  }
+
+  const txList = document.getElementById('finanzasTxList');
+  if(txList) {
+    if(tx.length === 0) {
+      txList.innerHTML = '<div style="color:var(--muted); padding:10px;">No hay transacciones completadas aún.</div>';
+    } else {
+      txList.innerHTML = tx.map(a => {
+        let m = (a.notes || '').match(/\[Staff: (.*?)\]/);
+        let sName = m && m[1] ? m[1].trim() : 'Sin asignar';
+        return `
+          <div style="display:flex; flex-direction:column; gap:4px; background:var(--card); padding:12px; border-radius:8px; border:1px solid var(--border);">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+              <div style="font-weight:700; font-size:14px; color:var(--ink);">${escapeHtml(a.clientName)}</div>
+              <div style="color:var(--green); font-weight:700;">$${(parseFloat(a.price)||0).toFixed(2)}</div>
+            </div>
+            <div style="display:flex; justify-content:space-between; font-size:12px; color:var(--muted);">
+              <div>${escapeHtml(a.service)} &bull; ${escapeHtml(sName)}</div>
+              <div>${a.date} ${a.startTime||''}</div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+  }
+};
+
 function renderClientes(){
   const q=(state.clientSearch||"").toLowerCase();
   const map=buildClientMap();
@@ -1526,8 +1908,8 @@ async function fetchSolicitudes() {
       service: r.service,
       price: r.price,
       date: r.date,
-      startTime: r.start_time,
-      endTime: r.end_time || '',
+      startTime: r.start_time ? String(r.start_time).padStart(5, '0') : '',
+      endTime: r.end_time ? String(r.end_time).padStart(5, '0') : '',
       notes: r.notes || '',
       status: r.status
     }));
@@ -1556,7 +1938,7 @@ function renderSolicitudesView(list) {
     return;
   }
   container.innerHTML = list.map(function(s) { 
-    var waTemplate = (document.getElementById('ajWhatsappMsg') && document.getElementById('ajWhatsappMsg').value) || 'Hola {nombre}, tu cita de {servicio} para el {fecha} a las {hora} ha sido confirmada. ¡Te esperamos!';
+    var waTemplate = (document.getElementById('ajWhatsappMsgSol') && document.getElementById('ajWhatsappMsgSol').value) || 'Hola {nombre}, hemos recibido tu solicitud para el {fecha} a las {hora}. En breve te confirmaremos.';
     var link_gestion = window.location.origin + window.location.pathname.replace(/\/[^/]*$/, '/booking.html') + '?manage=' + s.id;
     var waText = waTemplate.replace('{nombre}', s.client_name).replace('{servicio}', s.service).replace('{fecha}', s.date).replace('{hora}', fmt12h(s.start_time)).replace('{link_gestion}', link_gestion);
     var waLink = "https://wa.me/" + s.phone.replace(/\D/g, '') + "?text=" + encodeURIComponent(waText);
@@ -1576,8 +1958,8 @@ window.aprobarSolicitud = async function(docId) {
         service: s.service,
         price: s.price,
         date: s.date,
-        startTime: s.start_time,
-        endTime: s.end_time,
+        startTime: s.start_time ? String(s.start_time).padStart(5, '0') : '',
+        endTime: s.end_time ? String(s.end_time).padStart(5, '0') : '',
         status: 'scheduled',
         notes: s.notes,
         createdAt: s.created_at || new Date().toISOString()
@@ -1725,30 +2107,46 @@ document.getElementById("clientSearch").addEventListener("input",e=>{ state.clie
 
 // Nav switching
 document.getElementById("agendaBtn").addEventListener("click",function(){
-  state.currentView="agenda";
+  state.currentView="agenda"; localStorage.setItem("lumen.agenda.currentView", "agenda");
   document.querySelectorAll(".nav-item").forEach(n=>n.classList.remove("active"));
   this.classList.add("active");
   document.querySelectorAll(".view").forEach(v=>v.classList.remove("active"));
   document.getElementById("viewAgenda").classList.add("active");
   render();
 });
+document.getElementById("disponibilidadBtn").addEventListener("click",function(){
+  state.currentView="disponibilidad"; localStorage.setItem("lumen.agenda.currentView", "disponibilidad");
+  document.querySelectorAll(".nav-item").forEach(n=>n.classList.remove("active"));
+  this.classList.add("active");
+  document.querySelectorAll(".view").forEach(v=>v.classList.remove("active"));
+  document.getElementById("viewDisponibilidad").classList.add("active");
+  renderAvailability();
+});
 document.getElementById("clientesBtn").addEventListener("click",function(){
-  state.currentView="clientes";
+  state.currentView="clientes"; localStorage.setItem("lumen.agenda.currentView", "clientes");
   document.querySelectorAll(".nav-item").forEach(n=>n.classList.remove("active"));
   this.classList.add("active");
   document.querySelectorAll(".view").forEach(v=>v.classList.remove("active"));
   document.getElementById("viewClientes").classList.add("active");
   renderClientes();
 });
+document.getElementById("finanzasBtn").addEventListener("click",function(){
+  state.currentView="finanzas"; localStorage.setItem("lumen.agenda.currentView", "finanzas");
+  document.querySelectorAll(".nav-item").forEach(n=>n.classList.remove("active"));
+  this.classList.add("active");
+  document.querySelectorAll(".view").forEach(v=>v.classList.remove("active"));
+  document.getElementById("viewFinanzas").classList.add("active");
+  renderFinanzas();
+});
 document.getElementById("solicitudesBtn").addEventListener("click",function(){
-  state.currentView="solicitudes";
+  state.currentView="solicitudes"; localStorage.setItem("lumen.agenda.currentView", "solicitudes");
   document.querySelectorAll(".nav-item").forEach(n=>n.classList.remove("active"));
   this.classList.add("active");
   document.querySelectorAll(".view").forEach(v=>v.classList.remove("active"));
   document.getElementById("viewSolicitudes").classList.add("active");
 });
 document.getElementById("ajustesBtn").addEventListener("click",function(){
-  state.currentView="ajustes";
+  state.currentView="ajustes"; localStorage.setItem("lumen.agenda.currentView", "ajustes");
   document.querySelectorAll(".nav-item").forEach(n=>n.classList.remove("active"));
   this.classList.add("active");
   document.querySelectorAll(".view").forEach(v=>v.classList.remove("active"));
@@ -1762,6 +2160,7 @@ async function loadAjustes() {
     const { data, error } = await sbClient.from('config').select('value').eq('key', 'availability').single();
     if(data && data.value) {
       const v = data.value;
+      window.AVAIL = v;
       if(v.startHour !== undefined) document.getElementById('ajStartHour').value = String(v.startHour).padStart(2,'0')+':00';
       if(v.endHour !== undefined) document.getElementById('ajEndHour').value = String(v.endHour).padStart(2,'0')+':00';
       if(v.slotMinutes) document.getElementById('ajSlotMinutes').value = v.slotMinutes;
@@ -1776,6 +2175,10 @@ async function loadAjustes() {
         if (window.renderGlobalDisabledDates) window.renderGlobalDisabledDates();
       }
       if(v.whatsappMsg) document.getElementById('ajWhatsappMsg').value = v.whatsappMsg;
+      if(v.whatsappMsgSol !== undefined) document.getElementById('ajWhatsappMsgSol').value = v.whatsappMsgSol;
+      
+      if(v.telegramToken !== undefined) document.getElementById('ajTelegramToken').value = v.telegramToken;
+      if(v.telegramChatId !== undefined) document.getElementById('ajTelegramChatId').value = v.telegramChatId;
       
       if(v.logoBase64) {
         LOGO_BASE64 = v.logoBase64;
@@ -1799,6 +2202,7 @@ async function loadAjustes() {
       SERVICES = DEFAULT_SERVICES;
       renderAjustesServices();
     }
+    render();
   } catch(e) { console.error('Error loading config', e); }
 }
 
@@ -1848,6 +2252,9 @@ document.getElementById('ajSaveBtn').addEventListener('click', async function(){
     breakEnd: document.getElementById('ajBreakEnd').value || null,
     disabledDates: disabledDates,
     whatsappMsg: document.getElementById('ajWhatsappMsg').value || '',
+    whatsappMsgSol: document.getElementById('ajWhatsappMsgSol').value || '',
+    telegramToken: document.getElementById('ajTelegramToken').value || '',
+    telegramChatId: document.getElementById('ajTelegramChatId').value || '',
     logoBase64: LOGO_BASE64,
     services: SERVICES,
     staff: STAFF.filter(s => s.name.trim() !== '')
@@ -1875,6 +2282,29 @@ fMenu.querySelectorAll("button").forEach(b=>b.addEventListener("click",()=>{
 function syncFilterMenu(){
   fMenu.querySelectorAll("button").forEach(b=>b.classList.toggle("sel", b.dataset.f===state.filter));
   fBtn.style.color = state.filter==="all" ? "" : "var(--green)";
+  
+  const sAgenda = document.getElementById('staffAgendaFilter');
+  if(sAgenda) sAgenda.value = state.staffFilter;
+  const sAvail = document.getElementById('staffAvailFilter');
+  if(sAvail) sAvail.value = state.staffFilter;
+
+  let imgSrc = '';
+  if (state.staffFilter === 'all') {
+    imgSrc = typeof LOGO_BASE64 !== 'undefined' ? LOGO_BASE64 : '';
+  } else {
+    const st = STAFF.find(s => s.name.trim() === state.staffFilter);
+    if(st && st.image) imgSrc = st.image;
+  }
+  const iAgenda = document.getElementById('staffAgendaImg');
+  if(iAgenda) {
+    if(imgSrc) { iAgenda.src = imgSrc; iAgenda.style.display = 'block'; }
+    else iAgenda.style.display = 'none';
+  }
+  const iAvail = document.getElementById('staffAvailImg');
+  if(iAvail) {
+    if(imgSrc) { iAvail.src = imgSrc; iAvail.style.display = 'block'; }
+    else iAvail.style.display = 'none';
+  }
 }
 
 function shift(dir){
@@ -1902,7 +2332,14 @@ if(!localStorage.getItem('wiped_appts_clean')) {
   state.appts = [];
 }
 
-render();
+// Restore saved view
+const savedView = state.currentView || "agenda";
+const viewBtn = document.getElementById(savedView + "Btn");
+if(viewBtn) {
+  viewBtn.click();
+} else {
+  render();
+}
 </script>
 </body>
 </html>
