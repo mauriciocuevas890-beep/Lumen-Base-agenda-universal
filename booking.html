@@ -403,13 +403,73 @@ window.pickSvc=function(i){
   }
 };
 
+async function fetchNextAvailable(s) {
+  if(!sbOk) return 'Disponibilidad desconocida';
+  try {
+    var date = new Date();
+    for(var i=0; i<14; i++) {
+      var ds = iso(date);
+      var dow = date.getDay();
+      var isOff = (s.daysOff && s.daysOff.indexOf(dow)>=0) || (AVAIL.daysOff && AVAIL.daysOff.indexOf(dow)>=0);
+      var isBlk = (s.disabledDates && s.disabledDates.indexOf(ds)>=0) || (AVAIL.disabledDates && AVAIL.disabledDates.indexOf(ds)>=0) || (AVAIL.blockedDates && AVAIL.blockedDates.indexOf(ds)>=0);
+      
+      if(!isOff && !isBlk) {
+        var query = sbClient.from('appointments').select('start_time').eq('date',ds).in('status', ['scheduled', 'completed']).ilike('notes', '%[Staff: ' + s.name + ']%');
+        var r = await query;
+        var taken = (r.data||[]).map(function(row){return row.start_time;});
+        
+        var isToday = (ds === iso(new Date()));
+        var currentMins = (new Date()).getHours() * 60 + (new Date()).getMinutes();
+        var mins=AVAIL.startHour*60;
+        
+        var breakStartMins = -1;
+        var breakEndMins = -1;
+        if(AVAIL.breakStart && AVAIL.breakEnd) {
+          breakStartMins = parseInt(AVAIL.breakStart.split(':')[0],10)*60 + parseInt(AVAIL.breakStart.split(':')[1],10);
+          breakEndMins = parseInt(AVAIL.breakEnd.split(':')[0],10)*60 + parseInt(AVAIL.breakEnd.split(':')[1],10);
+        }
+
+        while(mins+AVAIL.slotMinutes<=AVAIL.endHour*60){ 
+          var slotEndMins = mins + AVAIL.slotMinutes;
+          var isBreak = false;
+          if(breakStartMins >= 0 && breakEndMins >= 0) {
+            if(mins >= breakStartMins && mins < breakEndMins) isBreak = true;
+            if(slotEndMins > breakStartMins && slotEndMins <= breakEndMins) isBreak = true;
+            if(mins <= breakStartMins && slotEndMins >= breakEndMins) isBreak = true;
+          }
+
+          if (!isBreak && (!isToday || mins > currentMins)) {
+            var tStr = pad(Math.floor(mins/60))+':'+pad(mins%60);
+            if(taken.indexOf(tStr) < 0) {
+               var dayName = isToday ? 'Hoy' : (i===1 ? 'Mañana' : DAYS_ES[dow].charAt(0).toUpperCase() + DAYS_ES[dow].slice(1));
+               return '<span style="color:#059669; font-weight:600;">●</span> Próxima hora disponible: ' + dayName + ' ' + fmt12h(tStr);
+            }
+          }
+          mins+=AVAIL.slotMinutes; 
+        }
+      }
+      date.setDate(date.getDate() + 1);
+    }
+    return '<span style="color:#DC2626; font-weight:600;">●</span> Sin espacios próximos';
+  } catch(e) {
+    return 'Disponibilidad desconocida';
+  }
+}
+
 function renderStaff() {
   document.getElementById('staffGrid').innerHTML = STAFF.map(function(s, i) {
     var avatar = s.image 
-      ? '<img src="'+s.image+'" style="width:40px;height:40px;border-radius:50%;object-fit:cover;margin-right:12px;flex-shrink:0;">'
-      : '<div style="width:40px;height:40px;border-radius:50%;background:var(--blue-light);color:var(--blue);display:flex;align-items:center;justify-content:center;font-weight:bold;margin-right:12px;flex-shrink:0;">'+(s.name?s.name.charAt(0).toUpperCase():'')+'</div>';
-    return '<div class="service-card" data-sid="'+i+'" onclick="pickStaff('+i+')"><div style="display:flex;align-items:center;">'+avatar+'<div class="sv-name">'+s.name+'</div></div></div>';
+      ? '<img src="'+s.image+'" style="width:84px;height:84px;border-radius:50%;object-fit:cover;margin-right:18px;flex-shrink:0;border:2px solid var(--border);">'
+      : '<div style="width:84px;height:84px;border-radius:50%;background:var(--blue-light);color:var(--blue);display:flex;align-items:center;justify-content:center;font-weight:bold;font-size:28px;margin-right:18px;flex-shrink:0;border:2px solid var(--border);">'+(s.name?s.name.charAt(0).toUpperCase():'')+'</div>';
+    return '<div class="service-card" style="padding:20px; align-items:center;" data-sid="'+i+'" onclick="pickStaff('+i+')"><div style="display:flex;align-items:center;">'+avatar+'<div><div class="sv-name" style="font-size:19px; font-weight:700; margin-bottom:6px;">'+s.name+'</div><div id="staff-avail-'+i+'" style="font-size:13.5px; color:var(--muted);"><span class="spinner" style="width:10px;height:10px;border-width:1px;border-color:var(--blue);border-bottom-color:transparent;"></span> Calculando...</div></div></div></div>';
   }).join('');
+  
+  STAFF.forEach(function(s, i) {
+    fetchNextAvailable(s).then(function(nextStr) {
+      var el = document.getElementById('staff-avail-'+i);
+      if(el) el.innerHTML = nextStr;
+    });
+  });
 }
 window.pickStaff = function(i) {
   selStaff = STAFF[i];
