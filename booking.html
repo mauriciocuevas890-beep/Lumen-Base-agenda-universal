@@ -78,6 +78,15 @@ body{font-family:"DM Sans",system-ui,sans-serif;background:var(--bg);color:var(-
 .spinner{display:inline-block;width:18px;height:18px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite}
 .step-view{display:none}.step-view.active{display:block}
 @media(max-width:480px){.main{padding:20px 14px 50px}.card{padding:20px 18px}.slots-grid{grid-template-columns:repeat(2,1fr)}}
+
+.week-scroll { display:flex; overflow-x:auto; gap:10px; padding-bottom:12px; scroll-snap-type:x mandatory; scrollbar-width:none; -ms-overflow-style:none; }
+.week-scroll::-webkit-scrollbar { display:none; }
+.week-day { flex-shrink:0; width:70px; border:2px solid var(--border); border-radius:12px; display:flex; flex-direction:column; align-items:center; padding:12px 0; cursor:pointer; scroll-snap-align:center; transition:all 0.15s; color:var(--text); }
+.week-day:hover { border-color:var(--blue); background:var(--blue-light); }
+.week-day.selected { border-color:var(--blue); background:var(--blue); color:#fff; }
+.week-day.selected .week-day-name { color:var(--blue-light); }
+.week-day-name { font-size:11px; font-weight:700; text-transform:uppercase; margin-bottom:4px; color:var(--muted); }
+.week-day-num { font-size:22px; font-weight:600; }
 </style>
 </head>
 <body>
@@ -95,11 +104,9 @@ body{font-family:"DM Sans",system-ui,sans-serif;background:var(--bg);color:var(-
   <div class="steps" id="stepsBar">
     <div class="step-item active" id="si1"><div class="step-num">1</div><div class="step-label">Servicio</div></div>
     <div class="step-line" id="sl1"></div>
-    <div class="step-item" id="si2"><div class="step-num">2</div><div class="step-label">Fecha</div></div>
+    <div class="step-item" id="si2"><div class="step-num">2</div><div class="step-label">Fecha y Hora</div></div>
     <div class="step-line" id="sl2"></div>
-    <div class="step-item" id="si3"><div class="step-num">3</div><div class="step-label">Horario</div></div>
-    <div class="step-line" id="sl3"></div>
-    <div class="step-item" id="si4"><div class="step-num">4</div><div class="step-label">Tus datos</div></div>
+    <div class="step-item" id="si3"><div class="step-num">3</div><div class="step-label">Tus datos</div></div>
   </div>
   
   <div class="step-view" id="manageView">
@@ -126,30 +133,34 @@ body{font-family:"DM Sans",system-ui,sans-serif;background:var(--bg);color:var(-
       <button class="btn-primary" id="s1Next" style="margin-top:24px" disabled>Continuar <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></button>
     </div>
   </div>
-  <div class="step-view" id="step2">
+    <div class="step-view" id="step2">
     <div class="card">
-      <div class="card-title">Selecciona una fecha</div>
-      <div class="card-sub">Los dias con punto azul tienen disponibilidad.</div>
-      <div class="cal-nav">
+      <div class="card-title">Fecha y Horario</div>
+      <div class="card-sub">Elige tu día y hora ideal.</div>
+      
+      <div id="calModeToggle" style="text-align:right; margin-bottom:12px;">
+        <button class="btn-ghost" style="padding:6px 12px; width:auto; display:inline-block; font-size:12px;" onclick="toggleCalMode()">Ver calendario completo</button>
+      </div>
+
+      <div class="cal-nav" id="calNavMonth" style="display:none;">
         <button class="cal-btn" id="calPrev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button>
         <span class="month-lbl" id="calMonthLbl"></span>
         <button class="cal-btn" id="calNext"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></button>
       </div>
-      <div class="cal-grid" id="calGrid"></div>
-      <button class="btn-primary" id="s2Next" style="margin-top:24px" disabled>Ver horarios <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></button>
+      
+      <div id="calContainer"></div>
+
+      <div id="slotsSection" style="display:none; margin-top:24px; border-top:1px solid var(--border); padding-top:20px;">
+        <div class="card-title" style="font-size:18px;">Horarios disponibles</div>
+        <div class="card-sub" id="s2Label" style="margin-bottom:16px;"></div>
+        <div id="slotsContainer"></div>
+      </div>
+
+      <button class="btn-primary" id="s2Next" style="margin-top:24px" disabled>Continuar <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></button>
       <button class="btn-ghost" id="s2Back">Cambiar servicio</button>
     </div>
   </div>
   <div class="step-view" id="step3">
-    <div class="card">
-      <div class="card-title">Elige tu horario</div>
-      <div class="card-sub" id="s3Label"></div>
-      <div id="slotsContainer"><div class="slots-loading">Cargando horarios...</div></div>
-      <button class="btn-primary" id="s3Next" style="margin-top:24px" disabled>Continuar <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></button>
-      <button class="btn-ghost" id="s3Back">Cambiar fecha</button>
-    </div>
-  </div>
-  <div class="step-view" id="step4">
     <div class="card">
       <div class="card-title">Tus datos</div>
       <div class="card-sub">Completa tu informacion para confirmar.</div>
@@ -160,8 +171,8 @@ body{font-family:"DM Sans",system-ui,sans-serif;background:var(--bg);color:var(-
         <div class="field"><label>Telefono *</label><input id="bPhone" type="tel" placeholder="+1 (555) 000-0000" /></div>
         <div class="field"><label>Notas (opcional)</label><textarea id="bNotes" placeholder="Documentos que tienes, preguntas..."></textarea></div>
       </div>
-      <button class="btn-primary" id="s4Submit" style="margin-top:20px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>Confirmar cita</button>
-      <button class="btn-ghost" id="s4Back">Cambiar horario</button>
+      <button class="btn-primary" id="s3Submit" style="margin-top:20px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>Confirmar cita</button>
+      <button class="btn-ghost" id="s3Back">Cambiar horario</button>
     </div>
   </div>
   <div class="step-view" id="stepOk">
@@ -375,7 +386,7 @@ function goStep(n){
   window.scrollTo({top:0,behavior:'smooth'});
 }
 function updateBar(){
-  for(var i=1;i<=4;i++){
+  for(var i=1;i<=3;i++){
     var si=document.getElementById('si'+i),sl=document.getElementById('sl'+i);
     if(curStep>i){si.className='step-item done';if(sl)sl.className='step-line done';}
     else if(curStep===i){si.className='step-item active';if(sl)sl.className='step-line';}
@@ -478,38 +489,73 @@ window.pickStaff = function(i) {
 };
 document.getElementById('s1Next').onclick=function(){goStep(2);renderCal();};
 
-// Step 2
+// Step 2 & 3 (Merged)
 var DOW=['LUN','MAR','MIE','JUE','VIE','SAB','DOM'];
+var calMode = 'week';
+window.toggleCalMode = function() {
+  calMode = (calMode === 'week') ? 'month' : 'week';
+  document.getElementById('calModeToggle').innerHTML = '<button class="btn-ghost" style="padding:6px 12px; width:auto; display:inline-block; font-size:12px;" onclick="toggleCalMode()">' + (calMode === 'week' ? 'Ver calendario completo' : 'Ver solo próximos días') + '</button>';
+  document.getElementById('calNavMonth').style.display = (calMode === 'month') ? 'flex' : 'none';
+  renderCal();
+};
+
 function renderCal(){
-  var y=calRef.getFullYear(),m=calRef.getMonth();
-  document.getElementById('calMonthLbl').textContent=MONTHS_ES[m]+' '+y;
-  var first=new Date(y,m,1),last=new Date(y,m+1,0);
-  var startDow=(first.getDay()+6)%7;
-  var html=DOW.map(function(d){return '<div class="cal-dow">'+d+'</div>';}).join('');
-  for(var i=0;i<startDow;i++) html+='<div class="cal-day out"></div>';
-  for(var d=1;d<=last.getDate();d++){
-    var ds=iso(new Date(y,m,d));
-    var cls='cal-day';
-    if(isPast(ds)) cls+=' past';
-    else if(isBlocked(ds)||!isWorkDay(ds)) cls+=' blocked';
-    else cls+=' open';
-    if(ds===selDate) cls+=' selected';
-    if(ds===iso(new Date())) cls+=' today';
-    html+='<div class="'+cls+'" data-date="'+ds+'" onclick="pickDate(\''+ds+'\')">'+d+'</div>';
+  var container = document.getElementById('calContainer');
+  if(calMode === 'month') {
+    var y=calRef.getFullYear(),m=calRef.getMonth();
+    document.getElementById('calMonthLbl').textContent=MONTHS_ES[m]+' '+y;
+    var first=new Date(y,m,1),last=new Date(y,m+1,0);
+    var startDow=(first.getDay()+6)%7;
+    var html='<div class="cal-grid">';
+    html+=DOW.map(function(d){return '<div class="cal-dow">'+d+'</div>';}).join('');
+    for(var i=0;i<startDow;i++) html+='<div class="cal-day out"></div>';
+    for(var d=1;d<=last.getDate();d++){
+      var ds=iso(new Date(y,m,d));
+      var cls='cal-day';
+      if(isPast(ds)) cls+=' past';
+      else if(isBlocked(ds)||!isWorkDay(ds)) cls+=' blocked';
+      else cls+=' open';
+      if(ds===selDate) cls+=' selected';
+      if(ds===iso(new Date())) cls+=' today';
+      html+='<div class="'+cls+'" data-date="'+ds+'" onclick="pickDate(\''+ds+'\')">'+d+'</div>';
+    }
+    html+='</div>';
+    container.innerHTML=html;
+  } else {
+    var html = '<div class="week-scroll">';
+    var date = new Date(); 
+    var added = 0;
+    for(var i=0; i<30 && added<14; i++) { 
+       var ds = iso(date);
+       if(!isPast(ds) && isWorkDay(ds) && !isBlocked(ds)) {
+         var cls = 'week-day';
+         if(ds===selDate) cls+=' selected';
+         var dowStr = DAYS_ES[date.getDay()].substring(0,3);
+         html+='<div class="'+cls+'" onclick="pickDate(\''+ds+'\')"><div class="week-day-name">'+dowStr+'</div><div class="week-day-num">'+date.getDate()+'</div></div>';
+         added++;
+       }
+       date.setDate(date.getDate() + 1);
+    }
+    html+='</div>';
+    container.innerHTML=html;
   }
-  document.getElementById('calGrid').innerHTML=html;
 }
+
 window.pickDate=function(ds){
   if(isPast(ds)||isBlocked(ds)||!isWorkDay(ds)) return;
   selDate=ds; selSlot=null;
-  document.getElementById('s2Next').disabled=false; renderCal();
+  document.getElementById('s2Next').disabled=true; 
+  renderCal();
+  
+  document.getElementById('slotsSection').style.display = 'block';
+  renderSlots();
 };
+
 document.getElementById('calPrev').onclick=function(){calRef.setMonth(calRef.getMonth()-1);renderCal();};
 document.getElementById('calNext').onclick=function(){calRef.setMonth(calRef.getMonth()+1);renderCal();};
-document.getElementById('s2Next').onclick=function(){goStep(3);renderSlots();};
+document.getElementById('s2Next').onclick=function(){goStep(3);renderSummary();};
 document.getElementById('s2Back').onclick=function(){goStep(1);};
 
-// Step 3
 async function getTaken(ds){
   if(!sbOk) return [];
   try{
@@ -522,18 +568,8 @@ async function getTaken(ds){
   }catch(e){return [];}
 }
 
-// Funciones Anti-Spam
 function checkSpamLimit() {
-  return true; // Temporalmente desactivado para pruebas
-  /*
-  try {
-    var bookings = JSON.parse(localStorage.getItem('lumen.taxes.recentBookings')) || [];
-    var now = Date.now();
-    bookings = bookings.filter(function(t) { return now - t < 24 * 60 * 60 * 1000; }); // Ultimas 24h
-    localStorage.setItem('lumen.taxes.recentBookings', JSON.stringify(bookings));
-    return bookings.length < 2;
-  } catch(e) { return true; }
-  */
+  return true; 
 }
 function recordBooking() {
   try {
@@ -544,9 +580,9 @@ function recordBooking() {
 }
 
 async function renderSlots(){
-  document.getElementById('s3Label').textContent=selDate?'Horarios para el '+fmtDate(selDate):'';
-  document.getElementById('slotsContainer').innerHTML='<div class="slots-loading">Verificando disponibilidad...</div>';
-  document.getElementById('s3Next').disabled=true;
+  document.getElementById('s2Label').textContent = fmtDate(selDate);
+  document.getElementById('slotsContainer').innerHTML='<div class="slots-loading"><span class="spinner" style="border-color:var(--blue);border-bottom-color:transparent;"></span> Buscando horarios...</div>';
+  document.getElementById('s2Next').disabled=true;
   var taken=await getTaken(selDate);
   
   var now = new Date();
@@ -582,22 +618,21 @@ async function renderSlots(){
     return '<div class="slot'+(tk?' taken':'')+'" data-time="'+t+'"'+(tk?'':' onclick="pickSlot(\''+t+'\')"')+'>'+fmt12h(t)+(tk?'<br><span style="font-size:10px">Ocupado</span>':'')+'</div>';
   }).join('')+'</div>';
 }
+
 window.pickSlot=function(t){
   selSlot=t;
   document.querySelectorAll('.slot').forEach(function(el){el.classList.toggle('selected',el.dataset.time===t);});
-  document.getElementById('s3Next').disabled=false;
+  document.getElementById('s2Next').disabled=false;
 };
-document.getElementById('s3Next').onclick=function(){goStep(4);renderSummary();};
-document.getElementById('s3Back').onclick=function(){goStep(2);};
 
-// Step 4
+// Step 3 (Tus Datos)
 function renderSummary(){
   var end=selSlot?addMins(selSlot,selSvc?selSvc.duration:60):'';
   let staffRow = selStaff ? '<div class="summary-row"><span class="k">Especialista</span><span class="v">'+selStaff.name+'</span></div>' : '';
   document.getElementById('bookSummary').innerHTML='<div class="summary-row"><span class="k">Servicio</span><span class="v">'+(selSvc?selSvc.name:'')+'</span></div>'+staffRow+'<div class="summary-row"><span class="k">Precio</span><span class="v">'+(selSvc?'$'+selSvc.price:'')+'</span></div><div class="summary-row"><span class="k">Fecha</span><span class="v">'+(selDate?fmtDate(selDate):'')+'</span></div><div class="summary-row"><span class="k">Horario</span><span class="v">'+(selSlot?fmt12h(selSlot):'')+'</span></div>';
 }
-document.getElementById('s4Back').onclick=function(){goStep(3);};
-document.getElementById('s4Submit').onclick=async function(){
+document.getElementById('s3Back').onclick=function(){goStep(2);};
+document.getElementById('s3Submit').onclick=async function(){
   var name=document.getElementById('bName').value.trim();
   var phone=document.getElementById('bPhone').value.trim();
   var notes=document.getElementById('bNotes').value.trim();
@@ -612,7 +647,7 @@ document.getElementById('s4Submit').onclick=async function(){
     return;
   }
 
-  var btn=document.getElementById('s4Submit');
+  var btn=document.getElementById('s3Submit');
   btn.disabled=true;btn.innerHTML='<span class="spinner"></span> Enviando...';
   var end=addMins(selSlot,selSvc?selSvc.duration:60);
   let finalNotes = notes;
